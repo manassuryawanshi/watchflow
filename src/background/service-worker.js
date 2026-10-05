@@ -44,18 +44,12 @@ chrome.commands.onCommand.addListener(async (command) => {
       return;
     }
 
-    if (command === 'toggle-window-fullscreen') {
-      chrome.tabs.sendMessage(activeTab.id, {
-        action: ACTIONS.TOGGLE_WINDOW_FULLSCREEN
-      }).catch(err => {
-        logger.debug('Tab sendMessage note (content script may not be loaded):', err);
-      });
-    } else if (command === 'toggle-focus-mode') {
+    if (command === 'toggle-focus-mode') {
       const settings = await storage.getSettings();
       const updatedFocus = !settings.focusModeEnabled;
       await storage.saveSettings({ focusModeEnabled: updatedFocus });
       chrome.tabs.sendMessage(activeTab.id, {
-        action: ACTIONS.TOGGLE_FOCUS_MODE,
+        action: ACTIONS.TOGGLE_FOCUS || 'TOGGLE_FOCUS',
         enabled: updatedFocus
       }).catch(err => {
         logger.debug('Tab sendMessage note:', err);

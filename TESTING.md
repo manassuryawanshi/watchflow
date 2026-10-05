@@ -43,14 +43,19 @@ This document contains step-by-step test plans to verify Phase 1 features of the
   - Window Fullscreen exits immediately.
   - Layout returns smoothly to normal YouTube layout with header, comments, and sidebars restored.
 
-### Test 2.3: Keyboard Shortcut (`Alt + W` / `Option + W`)
+### Test 2.3: Keyboard Shortcut (`W`)
 - **Steps**:
-  1. With video playing, press `Alt + W` (or `Option + W` on Mac).
+  1. With video playing on a watch page, press `W` (or `Shift + W`).
   2. Verify player enters Window Fullscreen.
-  3. Press `Alt + W` again.
+  3. Press `W` again.
+  4. Verify player exits Window Fullscreen.
+  5. Hold down `W` key and verify it does NOT rapidly flicker or toggle repeatedly.
+  6. Click inside YouTube search box or comment box and type "www"; verify characters type normally and Window Fullscreen does NOT trigger.
+  7. On YouTube homepage, press `W` and verify nothing happens.
 - **Expected Results**:
-  - Shortcut reliably toggles Window Fullscreen mode on and off.
-  - If typing in a comment box or search bar, pressing `Alt + W` does NOT trigger the toggle.
+  - Shortcut `W` reliably toggles Window Fullscreen mode on watch pages only.
+  - If typing in any input, textarea, or contenteditable field, pressing `W` does NOT trigger the toggle.
+  - Holding down `W` does not repeatedly toggle due to key repeat suppression.
 
 ### Test 2.4: Browser Window Resizing
 - **Steps**:

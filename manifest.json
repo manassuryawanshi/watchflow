@@ -53,13 +53,6 @@
     }
   ],
   "commands": {
-    "toggle-window-fullscreen": {
-      "suggested_key": {
-        "default": "Alt+W",
-        "mac": "Alt+W"
-      },
-      "description": "Toggle Window Fullscreen on YouTube"
-    },
     "toggle-focus-mode": {
       "suggested_key": {
         "default": "Alt+F",

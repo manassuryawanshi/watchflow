@@ -109,12 +109,19 @@
     HOME_FOCUS_HUB: 'yt-focus-home-hub',
   };
 
+  const SHORTCUTS = {
+    WINDOW_FULLSCREEN: 'W',
+    FOCUS_MODE: 'Alt+F',
+    EXIT_FULLSCREEN: 'Escape',
+  };
+
   const YTF_CONSTANTS = {
     ACTIONS,
     STORAGE_KEYS,
     DEFAULT_SETTINGS,
     SELECTORS,
     CSS_CLASSES,
+    SHORTCUTS,
   };
 
   root.YTF_CONSTANTS = YTF_CONSTANTS;

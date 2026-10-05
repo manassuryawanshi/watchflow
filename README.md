@@ -52,7 +52,7 @@ Youtube-focus/
 - **Native Player Controls**: Preserves all video controls (play/pause, seek scrubber, volume, subtitles, playback speed, quality gear menu).
 - **Player Injected Button**: Adds a dedicated Window Fullscreen button into YouTube's player controls bar (`.ytp-right-controls`) right next to the native theater/fullscreen buttons.
 - **Keyboard Shortcuts**:
-  - `Alt + W` (Mac: `Option + W`): Toggle Window Fullscreen.
+  - `W`: Toggle Window Fullscreen on watch pages.
   - `Escape`: Instantly exit Window Fullscreen.
 - **Responsive**: Automatically resizes with the browser window and fires layout recalculation events to `#movie_player`.
 - **SPA Resilience**: Survives in-page YouTube navigations without page reload.
@@ -134,7 +134,7 @@ YouTube Focus strictly abides by the principle of **least privilege**:
 ## Known Limitations (Phase 1)
 
 1. **YouTube Dynamic Class Obfuscation**: YouTube occasionally tests new polymer web component layouts. The extension uses resilient attribute selectors (`page-subtype="home"`, `#movie_player`, `.ytp-right-controls`), but changes to YouTube's internal player structure require centralized selector updates in `src/shared/constants.js`.
-2. **Native Fullscreen vs Window Fullscreen**: If native OS fullscreen (`F` key) is pressed while Window Fullscreen is active, the browser will enter OS fullscreen. Pressing `Escape` or `Alt+W` cleanly exits back to the normal view.
+2. **Native Fullscreen vs Window Fullscreen**: If native OS fullscreen (`F` key) is pressed while Window Fullscreen is active, the browser will enter OS fullscreen. Pressing `Escape` or `W` cleanly exits back to the normal view.
 3. **Embedded Players**: Window Fullscreen is designed for `youtube.com/watch` pages and does not run on third-party websites embedding YouTube `<iframe>` players.
 
 ---

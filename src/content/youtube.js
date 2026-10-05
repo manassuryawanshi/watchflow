@@ -176,7 +176,7 @@ console.log('[YTF] URL:', location.href);
   // =========================================================================
 
   function isWatchPage() {
-    return window.location.pathname === '/watch' || window.location.search.includes('v=');
+    return window.location.pathname === '/watch';
   }
 
   function isHomePage() {
@@ -187,11 +187,30 @@ console.log('[YTF] URL:', location.href);
     return window.location.pathname.startsWith('/shorts/');
   }
 
-  function isEditingText() {
-    const el = document.activeElement;
-    if (!el) return false;
-    const tagName = el.tagName.toLowerCase();
-    return tagName === 'input' || tagName === 'textarea' || el.isContentEditable;
+  function isTypingContext(target) {
+    const candidates = [];
+    if (target instanceof Element) {
+      candidates.push(target);
+    } else if (target && target.parentElement instanceof Element) {
+      candidates.push(target.parentElement);
+    }
+    if (document.activeElement instanceof Element && !candidates.includes(document.activeElement)) {
+      candidates.push(document.activeElement);
+    }
+
+    if (candidates.length === 0) return false;
+
+    for (const el of candidates) {
+      if (el.isContentEditable) return true;
+      if (typeof el.matches === 'function') {
+        if (el.matches('input, textarea, select, [contenteditable="true"]')) return true;
+      }
+      if (typeof el.closest === 'function') {
+        if (el.closest('input, textarea, select, [contenteditable="true"]')) return true;
+      }
+    }
+
+    return false;
   }
 
   function formatDuration(totalSeconds) {
@@ -304,8 +323,8 @@ console.log('[YTF] URL:', location.href);
       const btn = document.createElement('button');
       btn.className = `ytp-button ${CSS_CLASSES.PLAYER_BUTTON}${isWindowFullscreen ? ' ' + CSS_CLASSES.PLAYER_BUTTON_ACTIVE : ''}`;
       btn.setAttribute('type', 'button');
-      btn.setAttribute('aria-label', isWindowFullscreen ? 'Exit Window Fullscreen (Esc or Alt+W)' : 'Window Fullscreen (Alt+W)');
-      btn.setAttribute('title', isWindowFullscreen ? 'Exit Window Fullscreen (Esc or Alt+W)' : 'Window Fullscreen (Alt+W)');
+      btn.setAttribute('aria-label', isWindowFullscreen ? 'Exit Window Fullscreen (Esc or W)' : 'Window Fullscreen (W)');
+      btn.setAttribute('title', isWindowFullscreen ? 'Exit Window Fullscreen (Esc or W)' : 'Window Fullscreen (W)');
       btn.innerHTML = isWindowFullscreen ? ICON_COMPRESS : ICON_EXPAND;
 
       btn.addEventListener('click', (e) => {
@@ -360,13 +379,13 @@ console.log('[YTF] URL:', location.href);
       if (active) {
         btn.classList.add(CSS_CLASSES.PLAYER_BUTTON_ACTIVE);
         btn.innerHTML = ICON_COMPRESS;
-        btn.setAttribute('title', 'Exit Window Fullscreen (Esc or Alt+W)');
-        btn.setAttribute('aria-label', 'Exit Window Fullscreen (Esc or Alt+W)');
+        btn.setAttribute('title', 'Exit Window Fullscreen (Esc or W)');
+        btn.setAttribute('aria-label', 'Exit Window Fullscreen (Esc or W)');
       } else {
         btn.classList.remove(CSS_CLASSES.PLAYER_BUTTON_ACTIVE);
         btn.innerHTML = ICON_EXPAND;
-        btn.setAttribute('title', 'Window Fullscreen (Alt+W)');
-        btn.setAttribute('aria-label', 'Window Fullscreen (Alt+W)');
+        btn.setAttribute('title', 'Window Fullscreen (W)');
+        btn.setAttribute('aria-label', 'Window Fullscreen (W)');
       }
     } catch (err) {
       // Safe no-op
@@ -608,6 +627,7 @@ console.log('[YTF] URL:', location.href);
 
   function setupKeyboardShortcuts() {
     window.addEventListener('keydown', (e) => {
+      // Escape: Exit window fullscreen
       if (e.key === 'Escape' && isWindowFullscreen) {
         const openPopup = document.querySelector('.ytp-popup[style*="display: block"]');
         if (!openPopup) {
@@ -618,14 +638,27 @@ console.log('[YTF] URL:', location.href);
         }
       }
 
-      if (e.altKey && (e.key === 'w' || e.key === 'W') && !isEditingText()) {
+      // W shortcut for Window Fullscreen (case-insensitive, shift-friendly, watch pages only)
+      if (e.key && e.key.toLowerCase() === 'w') {
+        // Prevent repeated toggling when W is held down
+        if (e.repeat) return;
+
+        // Ignore modifier combinations (Ctrl+W, Cmd+W, Alt+W, Option+W)
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+        // Must not trigger while typing in inputs, textareas, contenteditable, search
+        if (isTypingContext(e.target)) return;
+
+        // Only activate on YouTube watch pages (/watch?v=...)
+        if (!isWatchPage()) return;
+
         e.preventDefault();
-        e.stopPropagation();
         toggleWindowFullscreen();
         return;
       }
 
-      if (e.altKey && (e.key === 'f' || e.key === 'F') && !isEditingText()) {
+      // Alt+F: Toggle Focus Mode
+      if (e.altKey && (e.key === 'f' || e.key === 'F') && !isTypingContext(e.target)) {
         e.preventDefault();
         e.stopPropagation();
         const nextState = !currentSettings.focusModeEnabled;
