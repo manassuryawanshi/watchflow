@@ -31,12 +31,14 @@
     "activeTab"
   ],
   "host_permissions": [
-    "https://www.youtube.com/*"
+    "*://*.youtube.com/*",
+    "*://youtube.com/*"
   ],
   "content_scripts": [
     {
       "matches": [
-        "https://www.youtube.com/*"
+        "*://*.youtube.com/*",
+        "*://youtube.com/*"
       ],
       "js": [
         "src/shared/constants.js",

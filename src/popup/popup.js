@@ -1,21 +1,34 @@
 /**
  * YouTube Focus - Popup Script
- * Coordinates UI with storage and active YouTube tab.
+ * Coordinates UI with storage and active YouTube tab via safe PING handshake.
  */
 
 (function () {
   'use strict';
 
-  const { ACTIONS } = window.YTF_CONSTANTS;
+  const { ACTIONS } = window.YTF_CONSTANTS || {
+    ACTIONS: {
+      PING: 'PING',
+      GET_STATUS: 'GET_STATUS',
+      TOGGLE_FULLSCREEN: 'TOGGLE_FULLSCREEN',
+      TOGGLE_FOCUS: 'TOGGLE_FOCUS',
+      ADD_TO_QUEUE: 'ADD_TO_QUEUE',
+      SETTINGS_CHANGED: 'SETTINGS_CHANGED',
+    }
+  };
   const storage = window.YTF_STORAGE;
 
   let activeTab = null;
   let currentVideoInfo = null;
   let isTabOnYouTube = false;
+  let isContentScriptConnected = false;
 
   // DOM Elements
   const tabStatusPill = document.getElementById('tab-status');
   const tabStatusText = document.getElementById('tab-status-text');
+  const connectionAlert = document.getElementById('connection-alert');
+  const btnReloadYouTube = document.getElementById('btn-reload-youtube');
+
   const todayTimeVal = document.getElementById('today-time-val');
   const sessionTimeVal = document.getElementById('session-time-val');
   const metricGoalVal = document.getElementById('metric-goal-val');
@@ -51,9 +64,6 @@
   const settingHideEndscreens = document.getElementById('setting-hide-endscreens');
   const settingHideComments = document.getElementById('setting-hide-comments');
 
-  /**
-   * Format seconds to concise readable string
-   */
   function formatSeconds(totalSeconds) {
     if (!totalSeconds || totalSeconds < 60) {
       return `${Math.round(totalSeconds || 0)}s`;
@@ -67,9 +77,6 @@
     return `${mins}m`;
   }
 
-  /**
-   * Initialize Popup
-   */
   async function init() {
     await loadSettingsAndStats();
     await checkActiveTab();
@@ -77,14 +84,10 @@
     bindEvents();
   }
 
-  /**
-   * Load stored settings and stats
-   */
   async function loadSettingsAndStats() {
     const settings = await storage.getSettings();
     const { today } = await storage.getDailyStats();
 
-    // Stats
     const watchSecs = today ? (today.watchTimeSeconds || 0) : 0;
     todayTimeVal.textContent = formatSeconds(watchSecs);
     sessionTimeVal.textContent = formatSeconds(watchSecs);
@@ -95,10 +98,8 @@
     const pct = Math.min(100, Math.round(((watchSecs / 60) / goalMins) * 100));
     goalProgressBar.style.width = `${pct}%`;
 
-    // Focus toggle
     toggleFocusMode.checked = !!settings.focusModeEnabled;
 
-    // Settings drawer checkboxes
     settingHideHome.checked = !!settings.hideHomeFeed;
     settingHideShorts.checked = !!settings.hideShorts;
     settingHideRecs.checked = !!settings.hideRecommendations;
@@ -106,26 +107,68 @@
     settingHideComments.checked = !!settings.hideComments;
   }
 
+  function setNotOnYouTube() {
+    isTabOnYouTube = false;
+    isContentScriptConnected = false;
+    tabStatusPill.className = 'tab-status-pill status-offline';
+    tabStatusText.textContent = 'Not on YouTube';
+    connectionAlert.classList.add('hidden');
+    toggleWindowFs.disabled = true;
+    activeVideoCard.classList.add('hidden');
+  }
+
+  function setIntegrationUnavailable() {
+    isTabOnYouTube = true;
+    isContentScriptConnected = false;
+    tabStatusPill.className = 'tab-status-pill status-warning';
+    tabStatusText.textContent = 'Integration Unavailable';
+    connectionAlert.classList.remove('hidden');
+    toggleWindowFs.disabled = true;
+    activeVideoCard.classList.add('hidden');
+  }
+
+  function setConnectedOnYouTube() {
+    isTabOnYouTube = true;
+    isContentScriptConnected = true;
+    tabStatusPill.className = 'tab-status-pill status-online';
+    tabStatusText.textContent = 'Active on YouTube';
+    connectionAlert.classList.add('hidden');
+    toggleWindowFs.disabled = false;
+  }
+
   /**
-   * Check Active Browser Tab
+   * Safe PING Handshake to check if content script is actually running in tab
    */
   async function checkActiveTab() {
     try {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
       activeTab = tab;
 
-      if (tab && tab.url && tab.url.includes('youtube.com')) {
-        isTabOnYouTube = true;
-        tabStatusPill.className = 'tab-status-pill status-online';
-        tabStatusText.textContent = 'Active on YouTube';
+      if (!tab || !tab.url || !tab.url.includes('youtube.com')) {
+        setNotOnYouTube();
+        return;
+      }
 
-        // Query content script for live status
-        chrome.tabs.sendMessage(tab.id, { action: ACTIONS.GET_PAGE_STATUS }, (response) => {
-          if (chrome.runtime.lastError || !response) {
-            // Content script might not be injected yet
-            return;
-          }
+      // Tab URL is on YouTube; now check if content script receiver is responsive
+      let pingResult = null;
+      try {
+        pingResult = await chrome.tabs.sendMessage(tab.id, { action: ACTIONS.PING || 'PING' });
+      } catch (err) {
+        console.warn('[YTF] PING failed (content script not ready or tab needs reload):', err.message);
+      }
 
+      if (!pingResult || !pingResult.connected) {
+        setIntegrationUnavailable();
+        return;
+      }
+
+      // Handshake succeeded!
+      setConnectedOnYouTube();
+
+      // Retrieve live page status
+      try {
+        const response = await chrome.tabs.sendMessage(tab.id, { action: ACTIONS.GET_STATUS || 'GET_STATUS' });
+        if (response) {
           if (typeof response.focusModeEnabled === 'boolean') {
             toggleFocusMode.checked = response.focusModeEnabled;
           }
@@ -141,22 +184,16 @@
           } else {
             activeVideoCard.classList.add('hidden');
           }
-        });
-      } else {
-        isTabOnYouTube = false;
-        tabStatusPill.className = 'tab-status-pill status-offline';
-        tabStatusText.textContent = 'Not on YouTube';
-        toggleWindowFs.disabled = true;
-        activeVideoCard.classList.add('hidden');
+        }
+      } catch (err) {
+        console.warn('[YTF] GET_STATUS error:', err.message);
       }
     } catch (err) {
-      console.warn('Error querying active tab:', err);
+      console.warn('[YTF] Active tab query error:', err);
+      setNotOnYouTube();
     }
   }
 
-  /**
-   * Render active video information
-   */
   async function showActiveVideoCard(videoInfo, isFs) {
     if (!videoInfo || !videoInfo.title) return;
 
@@ -164,7 +201,6 @@
     activeVideoTitle.textContent = videoInfo.title;
     activeVideoChannel.textContent = `${videoInfo.channel || 'YouTube'}${videoInfo.duration ? ' • ' + videoInfo.duration : ''}`;
 
-    // Check if video is already in learning queue
     const queue = await storage.getLearningQueue();
     const alreadyInQueue = queue.some(item => item.url === videoInfo.url || (item.id && item.id === videoInfo.id));
 
@@ -173,23 +209,18 @@
       btnAddQueue.classList.add('btn-secondary');
     } else {
       addQueueText.textContent = 'Add to Queue';
+      btnAddQueue.classList.remove('btn-secondary');
     }
 
     quickFsText.textContent = isFs ? 'Exit Window Fullscreen' : 'Window Fullscreen';
   }
 
-  /**
-   * Update Queue Count Badge
-   */
   async function updateQueueBadge() {
     const queue = await storage.getLearningQueue();
     const pendingCount = queue.filter(q => !q.completed).length;
     queueCountBadge.textContent = pendingCount;
   }
 
-  /**
-   * Render Queue Items inside Drawer
-   */
   async function renderQueueDrawer() {
     const queue = await storage.getLearningQueue();
     queueItemsList.innerHTML = '';
@@ -251,60 +282,77 @@
     }
   }
 
-  /**
-   * Bind DOM Events
-   */
   function bindEvents() {
+    // Reload YouTube Tab Button
+    btnReloadYouTube.addEventListener('click', async () => {
+      if (activeTab && activeTab.id) {
+        btnReloadYouTube.textContent = 'Reloading...';
+        await chrome.tabs.reload(activeTab.id);
+        window.close();
+      }
+    });
+
     // Focus Mode Toggle
     toggleFocusMode.addEventListener('change', async () => {
       const isChecked = toggleFocusMode.checked;
       await storage.saveSettings({ focusModeEnabled: isChecked });
 
-      if (isTabOnYouTube && activeTab && activeTab.id) {
-        chrome.tabs.sendMessage(activeTab.id, {
-          action: ACTIONS.TOGGLE_FOCUS_MODE,
-          enabled: isChecked
-        }).catch(() => {});
+      if (isContentScriptConnected && activeTab && activeTab.id) {
+        try {
+          await chrome.tabs.sendMessage(activeTab.id, {
+            action: ACTIONS.TOGGLE_FOCUS || 'TOGGLE_FOCUS',
+            enabled: isChecked
+          });
+        } catch (err) {
+          console.warn('[YTF] Failed to message tab for focus toggle:', err.message);
+        }
       }
     });
 
     // Window Fullscreen Toggle
-    toggleWindowFs.addEventListener('change', () => {
-      if (isTabOnYouTube && activeTab && activeTab.id) {
-        chrome.tabs.sendMessage(activeTab.id, {
-          action: ACTIONS.TOGGLE_WINDOW_FULLSCREEN
-        }, (response) => {
+    toggleWindowFs.addEventListener('change', async () => {
+      if (isContentScriptConnected && activeTab && activeTab.id) {
+        try {
+          const response = await chrome.tabs.sendMessage(activeTab.id, {
+            action: ACTIONS.TOGGLE_FULLSCREEN || 'TOGGLE_FULLSCREEN'
+          });
           if (response && typeof response.isWindowFullscreen === 'boolean') {
             toggleWindowFs.checked = response.isWindowFullscreen;
             quickFsText.textContent = response.isWindowFullscreen ? 'Exit Window Fullscreen' : 'Window Fullscreen';
           }
-        });
+        } catch (err) {
+          console.warn('[YTF] Failed to message tab for fullscreen toggle:', err.message);
+        }
       }
     });
 
-    // Quick Window Fullscreen button on active video card
-    btnQuickFs.addEventListener('click', () => {
-      if (isTabOnYouTube && activeTab && activeTab.id) {
-        chrome.tabs.sendMessage(activeTab.id, {
-          action: ACTIONS.TOGGLE_WINDOW_FULLSCREEN
-        }, (response) => {
+    // Quick Window Fullscreen button
+    btnQuickFs.addEventListener('click', async () => {
+      if (isContentScriptConnected && activeTab && activeTab.id) {
+        try {
+          const response = await chrome.tabs.sendMessage(activeTab.id, {
+            action: ACTIONS.TOGGLE_FULLSCREEN || 'TOGGLE_FULLSCREEN'
+          });
           if (response && typeof response.isWindowFullscreen === 'boolean') {
             toggleWindowFs.checked = response.isWindowFullscreen;
             quickFsText.textContent = response.isWindowFullscreen ? 'Exit Window Fullscreen' : 'Window Fullscreen';
           }
-        });
+        } catch (err) {
+          console.warn('[YTF] Failed to message tab for quick fullscreen:', err.message);
+        }
       }
     });
 
-    // Add to Queue button on active video card
+    // Add to Queue button
     btnAddQueue.addEventListener('click', async () => {
       if (!currentVideoInfo) return;
       await storage.addToLearningQueue(currentVideoInfo);
-      addQueueText.textContent = 'Added ✓';
+      addQueueText.textContent = 'In Queue ✓';
+      btnAddQueue.classList.add('btn-secondary');
       updateQueueBadge();
     });
 
-    // Queue Drawer toggles
+    // Drawer Toggles
     btnOpenQueue.addEventListener('click', () => {
       renderQueueDrawer();
       queueDrawer.classList.remove('hidden');
@@ -314,7 +362,6 @@
       queueDrawer.classList.add('hidden');
     });
 
-    // Settings Drawer toggles
     btnOpenSettings.addEventListener('click', () => {
       settingsDrawer.classList.remove('hidden');
     });
@@ -336,11 +383,15 @@
       el.addEventListener('change', async () => {
         const update = { [key]: el.checked };
         const saved = await storage.saveSettings(update);
-        if (isTabOnYouTube && activeTab && activeTab.id) {
-          chrome.tabs.sendMessage(activeTab.id, {
-            action: ACTIONS.SETTINGS_CHANGED,
-            settings: saved
-          }).catch(() => {});
+        if (isContentScriptConnected && activeTab && activeTab.id) {
+          try {
+            await chrome.tabs.sendMessage(activeTab.id, {
+              action: ACTIONS.SETTINGS_CHANGED || 'SETTINGS_CHANGED',
+              settings: saved
+            });
+          } catch (err) {
+            console.warn('[YTF] Failed to notify tab of settings change:', err.message);
+          }
         }
       });
     }
@@ -351,6 +402,5 @@
     });
   }
 
-  // Initialize
   init();
 })();

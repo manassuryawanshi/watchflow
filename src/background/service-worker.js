@@ -76,7 +76,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   if (message.action === ACTIONS.SETTINGS_CHANGED) {
     // Notify all YouTube tabs of settings change
-    chrome.tabs.query({ url: '*://*.youtube.com/*' }, (tabs) => {
+    chrome.tabs.query({ url: ['*://*.youtube.com/*', '*://youtube.com/*'] }, (tabs) => {
       for (const tab of tabs) {
         if (tab.id) {
           chrome.tabs.sendMessage(tab.id, message).catch(() => {});

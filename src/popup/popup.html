@@ -20,6 +20,16 @@
       </div>
     </header>
 
+    <!-- Connection Alert (Shown when on YouTube tab but content script not responding) -->
+    <div id="connection-alert" class="connection-alert hidden">
+      <div class="alert-icon">⚠️</div>
+      <div class="alert-content">
+        <div class="alert-title">Integration Unavailable</div>
+        <div class="alert-desc">Reload this tab to connect the updated extension.</div>
+      </div>
+      <button type="button" class="btn btn-warning btn-sm" id="btn-reload-youtube">Reload</button>
+    </div>
+
     <!-- Today's Watch Time & Goal Card -->
     <section class="metric-card">
       <div class="metric-header">

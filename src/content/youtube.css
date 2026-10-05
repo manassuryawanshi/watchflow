@@ -106,26 +106,35 @@ body.yt-focus-window-fullscreen .ytp-popup {
    ========================================================================== */
 
 /* Distraction hiding on Home Browse page */
+html.yt-focus-mode-active ytd-browse[page-subtype="home"] #contents,
 body.yt-focus-mode-active ytd-browse[page-subtype="home"] #contents,
+html.yt-focus-mode-active ytd-browse[page-subtype="home"] ytd-rich-grid-renderer > #contents,
 body.yt-focus-mode-active ytd-browse[page-subtype="home"] ytd-rich-grid-renderer > #contents,
+html.yt-focus-mode-active ytd-browse[page-subtype="home"] #chips-wrapper,
 body.yt-focus-mode-active ytd-browse[page-subtype="home"] #chips-wrapper,
+html.yt-focus-mode-active ytd-browse[page-subtype="home"] #header,
 body.yt-focus-mode-active ytd-browse[page-subtype="home"] #header {
   display: none !important;
 }
 
 /* If user deliberately clicks "Show Feed Temporarily" */
-body.yt-focus-mode-active.yt-focus-temp-feed-revealed ytd-browse[page-subtype="home"] #contents,
-body.yt-focus-mode-active.yt-focus-temp-feed-revealed ytd-browse[page-subtype="home"] ytd-rich-grid-renderer > #contents {
+html.yt-focus-temp-feed-revealed ytd-browse[page-subtype="home"] #contents,
+body.yt-focus-temp-feed-revealed ytd-browse[page-subtype="home"] #contents,
+html.yt-focus-temp-feed-revealed ytd-browse[page-subtype="home"] ytd-rich-grid-renderer > #contents,
+body.yt-focus-temp-feed-revealed ytd-browse[page-subtype="home"] ytd-rich-grid-renderer > #contents {
   display: flex !important;
 }
 
 /* Hide recommended / related videos on watch page */
+html.yt-focus-mode-active ytd-watch-flexy #secondary #related,
 body.yt-focus-mode-active ytd-watch-flexy #secondary #related,
+html.yt-focus-mode-active ytd-watch-flexy #secondary ytd-watch-next-secondary-results-renderer,
 body.yt-focus-mode-active ytd-watch-flexy #secondary ytd-watch-next-secondary-results-renderer {
   display: none !important;
 }
 
 /* CRITICAL: Ensure Course / Playlist Panels remain visible! */
+html.yt-focus-mode-active ytd-watch-flexy #secondary ytd-playlist-panel-renderer,
 body.yt-focus-mode-active ytd-watch-flexy #secondary ytd-playlist-panel-renderer {
   display: block !important;
   visibility: visible !important;
@@ -133,11 +142,17 @@ body.yt-focus-mode-active ytd-watch-flexy #secondary ytd-playlist-panel-renderer
 }
 
 /* Hide Shorts entry points */
+html.yt-focus-mode-active ytd-guide-entry-renderer:has(a[href^="/shorts"]),
 body.yt-focus-mode-active ytd-guide-entry-renderer:has(a[href^="/shorts"]),
+html.yt-focus-mode-active ytd-mini-guide-entry-renderer[aria-label="Shorts"],
 body.yt-focus-mode-active ytd-mini-guide-entry-renderer[aria-label="Shorts"],
+html.yt-focus-mode-active ytd-mini-guide-entry-renderer:has(a[href^="/shorts"]),
 body.yt-focus-mode-active ytd-mini-guide-entry-renderer:has(a[href^="/shorts"]),
+html.yt-focus-mode-active a[title="Shorts"],
 body.yt-focus-mode-active a[title="Shorts"],
+html.yt-focus-mode-active ytd-reel-shelf-renderer,
 body.yt-focus-mode-active ytd-reel-shelf-renderer,
+html.yt-focus-mode-active ytd-rich-shelf-renderer[is-shorts],
 body.yt-focus-mode-active ytd-rich-shelf-renderer[is-shorts] {
   display: none !important;
 }
