@@ -234,30 +234,34 @@ console.log('[YTF] URL:', location.href);
       return;
     }
 
-    if (document.documentElement) {
+    if (document.documentElement && document.documentElement.classList) {
       document.documentElement.classList.add(CSS_CLASSES.WINDOW_FULLSCREEN_ACTIVE);
     }
-    if (document.body) {
+    if (document.body && document.body.classList) {
       document.body.classList.add(CSS_CLASSES.WINDOW_FULLSCREEN_ACTIVE);
     }
     isWindowFullscreen = true;
 
     updatePlayerButtonState(true);
-    window.dispatchEvent(new Event('resize'));
+    if (typeof window.dispatchEvent === 'function' && typeof Event !== 'undefined') {
+      window.dispatchEvent(new Event('resize'));
+    }
     console.log('[YTF] Window Fullscreen enabled');
   }
 
   function disableWindowFullscreen() {
-    if (document.documentElement) {
+    if (document.documentElement && document.documentElement.classList) {
       document.documentElement.classList.remove(CSS_CLASSES.WINDOW_FULLSCREEN_ACTIVE);
     }
-    if (document.body) {
+    if (document.body && document.body.classList) {
       document.body.classList.remove(CSS_CLASSES.WINDOW_FULLSCREEN_ACTIVE);
     }
     isWindowFullscreen = false;
 
     updatePlayerButtonState(false);
-    window.dispatchEvent(new Event('resize'));
+    if (typeof window.dispatchEvent === 'function' && typeof Event !== 'undefined') {
+      window.dispatchEvent(new Event('resize'));
+    }
     console.log('[YTF] Window Fullscreen disabled');
   }
 
@@ -271,58 +275,101 @@ console.log('[YTF] URL:', location.href);
 
   function ensurePlayerButtonInjected() {
     if (!currentSettings.showPlayerButton) return;
+    if (!isWatchPage()) return;
 
-    const rightControls = document.querySelector(SELECTORS.rightControls);
-    if (!rightControls) {
-      setTimeout(ensurePlayerButtonInjected, 400);
-      return;
+    try {
+      // Step A: Find the current live .ytp-right-controls container
+      const rightControls = document.querySelector(SELECTORS.rightControls);
+      if (!rightControls || !rightControls.isConnected) {
+        return;
+      }
+
+      // Step B: Check whether .yt-focus-player-btn already exists inside that CURRENT live container
+      const existingBtn = rightControls.querySelector(`.${CSS_CLASSES.PLAYER_BUTTON}`);
+      if (existingBtn && existingBtn.isConnected) {
+        // Step C: If it exists in current controls, sync active state and do nothing else
+        updatePlayerButtonState(isWindowFullscreen);
+        return;
+      }
+
+      // Clean up any stale or orphaned buttons in detached or obsolete elements
+      const staleButtons = document.querySelectorAll(`.${CSS_CLASSES.PLAYER_BUTTON}`);
+      for (const stale of staleButtons) {
+        if (!rightControls.contains(stale)) {
+          stale.remove();
+        }
+      }
+
+      // Step D: Create the new button
+      const btn = document.createElement('button');
+      btn.className = `ytp-button ${CSS_CLASSES.PLAYER_BUTTON}${isWindowFullscreen ? ' ' + CSS_CLASSES.PLAYER_BUTTON_ACTIVE : ''}`;
+      btn.setAttribute('type', 'button');
+      btn.setAttribute('aria-label', isWindowFullscreen ? 'Exit Window Fullscreen (Esc or Alt+W)' : 'Window Fullscreen (Alt+W)');
+      btn.setAttribute('title', isWindowFullscreen ? 'Exit Window Fullscreen (Esc or Alt+W)' : 'Window Fullscreen (Alt+W)');
+      btn.innerHTML = isWindowFullscreen ? ICON_COMPRESS : ICON_EXPAND;
+
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleWindowFullscreen();
+      });
+
+      // Step E: Look for live reference elements whose parent is rightControls
+      let referenceNode = null;
+      const sizeBtn = rightControls.querySelector(SELECTORS.sizeButton);
+      const fullscreenBtn = rightControls.querySelector(SELECTORS.fullscreenButton);
+
+      if (sizeBtn && sizeBtn.isConnected) {
+        if (sizeBtn.parentNode === rightControls) {
+          referenceNode = sizeBtn;
+        } else if (sizeBtn.parentElement && sizeBtn.parentElement.parentNode === rightControls) {
+          referenceNode = sizeBtn.parentElement;
+        }
+      }
+
+      if (!referenceNode && fullscreenBtn && fullscreenBtn.isConnected) {
+        if (fullscreenBtn.parentNode === rightControls) {
+          referenceNode = fullscreenBtn;
+        } else if (fullscreenBtn.parentElement && fullscreenBtn.parentElement.parentNode === rightControls) {
+          referenceNode = fullscreenBtn.parentElement;
+        }
+      }
+
+      // Step F: Safe insertion with strict parentNode verification
+      if (referenceNode && referenceNode.parentNode === rightControls && referenceNode.isConnected) {
+        rightControls.insertBefore(btn, referenceNode);
+      } else {
+        rightControls.appendChild(btn);
+      }
+
+      console.log('[YTF] Window Fullscreen player button injected successfully');
+    } catch (err) {
+      console.warn('[YTF] Safe player button injection notice:', err);
     }
-
-    if (document.querySelector(`.${CSS_CLASSES.PLAYER_BUTTON}`)) {
-      updatePlayerButtonState(isWindowFullscreen);
-      return;
-    }
-
-    const btn = document.createElement('button');
-    btn.className = `ytp-button ${CSS_CLASSES.PLAYER_BUTTON}`;
-    btn.setAttribute('aria-label', 'Window Fullscreen (Alt+W)');
-    btn.setAttribute('title', 'Window Fullscreen (Alt+W)');
-    btn.innerHTML = isWindowFullscreen ? ICON_COMPRESS : ICON_EXPAND;
-
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      toggleWindowFullscreen();
-    });
-
-    const sizeBtn = rightControls.querySelector(SELECTORS.sizeButton);
-    const fullscreenBtn = rightControls.querySelector(SELECTORS.fullscreenButton);
-
-    if (sizeBtn) {
-      rightControls.insertBefore(btn, sizeBtn);
-    } else if (fullscreenBtn) {
-      rightControls.insertBefore(btn, fullscreenBtn);
-    } else {
-      rightControls.appendChild(btn);
-    }
-
-    console.log('[YTF] Window Fullscreen player button injected');
   }
 
   function updatePlayerButtonState(active) {
-    const btn = document.querySelector(`.${CSS_CLASSES.PLAYER_BUTTON}`);
-    if (!btn) return;
+    try {
+      const rightControls = document.querySelector(SELECTORS.rightControls);
+      const btn = (rightControls && rightControls.isConnected)
+        ? rightControls.querySelector(`.${CSS_CLASSES.PLAYER_BUTTON}`)
+        : document.querySelector(`.${CSS_CLASSES.PLAYER_BUTTON}`);
 
-    if (active) {
-      btn.classList.add(CSS_CLASSES.PLAYER_BUTTON_ACTIVE);
-      btn.innerHTML = ICON_COMPRESS;
-      btn.setAttribute('title', 'Exit Window Fullscreen (Esc or Alt+W)');
-      btn.setAttribute('aria-label', 'Exit Window Fullscreen (Esc or Alt+W)');
-    } else {
-      btn.classList.remove(CSS_CLASSES.PLAYER_BUTTON_ACTIVE);
-      btn.innerHTML = ICON_EXPAND;
-      btn.setAttribute('title', 'Window Fullscreen (Alt+W)');
-      btn.setAttribute('aria-label', 'Window Fullscreen (Alt+W)');
+      if (!btn || !btn.isConnected) return;
+
+      if (active) {
+        btn.classList.add(CSS_CLASSES.PLAYER_BUTTON_ACTIVE);
+        btn.innerHTML = ICON_COMPRESS;
+        btn.setAttribute('title', 'Exit Window Fullscreen (Esc or Alt+W)');
+        btn.setAttribute('aria-label', 'Exit Window Fullscreen (Esc or Alt+W)');
+      } else {
+        btn.classList.remove(CSS_CLASSES.PLAYER_BUTTON_ACTIVE);
+        btn.innerHTML = ICON_EXPAND;
+        btn.setAttribute('title', 'Window Fullscreen (Alt+W)');
+        btn.setAttribute('aria-label', 'Window Fullscreen (Alt+W)');
+      }
+    } catch (err) {
+      // Safe no-op
     }
   }
 
@@ -332,7 +379,7 @@ console.log('[YTF] URL:', location.href);
 
   function applyFocusMode(enabled) {
     // Apply to html element immediately (safe before body exists)
-    if (document.documentElement) {
+    if (document.documentElement && document.documentElement.classList) {
       if (enabled) {
         document.documentElement.classList.add(CSS_CLASSES.FOCUS_MODE_ACTIVE);
       } else {
@@ -340,7 +387,7 @@ console.log('[YTF] URL:', location.href);
       }
     }
 
-    if (!document.body) {
+    if (!document.body || !document.body.classList) {
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => applyFocusMode(enabled), { once: true });
       }
@@ -516,6 +563,21 @@ console.log('[YTF] URL:', location.href);
     }
   }
 
+  let injectionDebounceTimer = null;
+
+  function scheduleButtonCheck() {
+    if (!isWatchPage() || !currentSettings.showPlayerButton) return;
+    if (injectionDebounceTimer) return;
+
+    injectionDebounceTimer = requestAnimationFrame(() => {
+      injectionDebounceTimer = null;
+      const rightControls = document.querySelector(SELECTORS.rightControls);
+      if (rightControls && rightControls.isConnected && !rightControls.querySelector(`.${CSS_CLASSES.PLAYER_BUTTON}`)) {
+        ensurePlayerButtonInjected();
+      }
+    });
+  }
+
   function setupNavigationListeners() {
     window.addEventListener('yt-navigate-finish', () => {
       handleUrlChange(window.location.href);
@@ -530,9 +592,15 @@ console.log('[YTF] URL:', location.href);
       }
     });
 
+    // Handle player control recreation on resize and fullscreen changes
+    window.addEventListener('resize', scheduleButtonCheck);
+    document.addEventListener('fullscreenchange', scheduleButtonCheck);
+
     const bodyObserver = new MutationObserver(() => {
       if (window.location.href !== lastUrl) {
         handleUrlChange(window.location.href);
+      } else if (isWatchPage()) {
+        scheduleButtonCheck();
       }
     });
     bodyObserver.observe(document.documentElement, { subtree: true, childList: true });
