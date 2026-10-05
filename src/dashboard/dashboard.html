@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouTube Focus — Dashboard</title>
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <img src="../icons/icon-32.png" alt="Logo" width="24" height="24">
+        <h2>YouTube Focus</h2>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button type="button" class="nav-item active" data-section="overview">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+            <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
+          </svg>
+          <span>Overview</span>
+        </button>
+
+        <button type="button" class="nav-item" data-section="learning">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+            <path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12z"/>
+          </svg>
+          <span>Learning Queue</span>
+          <span class="badge" id="nav-queue-count">0</span>
+        </button>
+
+        <button type="button" class="nav-item" data-section="focus">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+          </svg>
+          <span>Focus & Distractions</span>
+        </button>
+
+        <button type="button" class="nav-item" data-section="limits">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+            <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
+          </svg>
+          <span>Time Management</span>
+        </button>
+
+        <button type="button" class="nav-item" data-section="settings">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+            <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+          </svg>
+          <span>Preferences & Data</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="privacy-badge">
+          <span class="privacy-dot"></span>
+          <span>100% Local &amp; Private</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Section: Overview -->
+      <section id="section-overview" class="content-section active">
+        <header class="section-header">
+          <div>
+            <h1>Overview</h1>
+            <p class="subtitle">Intentional viewing metrics and core controls.</p>
+          </div>
+          <div class="header-actions">
+            <a href="https://www.youtube.com" target="_blank" class="btn btn-primary">
+              <span>Open YouTube</span>
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                <path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/>
+              </svg>
+            </a>
+          </div>
+        </header>
+
+        <!-- KPI Cards -->
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <span class="kpi-label">Today's Watch Time</span>
+            <div class="kpi-val" id="ov-watch-time">0m</div>
+            <span class="kpi-sub" id="ov-watch-sub">Goal: 90m</span>
+          </div>
+
+          <div class="kpi-card">
+            <span class="kpi-label">Learning Queue</span>
+            <div class="kpi-val" id="ov-queue-count">0</div>
+            <span class="kpi-sub" id="ov-queue-sub">0 completed</span>
+          </div>
+
+          <div class="kpi-card">
+            <span class="kpi-label">Focus Mode Status</span>
+            <div class="kpi-val text-accent" id="ov-focus-status">Active</div>
+            <span class="kpi-sub">Distractions blocked</span>
+          </div>
+
+          <div class="kpi-card">
+            <span class="kpi-label">Window Fullscreen</span>
+            <div class="kpi-val" id="ov-fs-status">Ready</div>
+            <span class="kpi-sub">Shortcut: Alt+W</span>
+          </div>
+        </div>
+
+        <!-- Window Fullscreen Spotlight Banner -->
+        <div class="feature-banner">
+          <div class="banner-text">
+            <h3>Window Fullscreen Mode</h3>
+            <p>
+              Fills your entire browser window with the video while keeping your Chrome tabs and URL bar visible.
+              Escape key exits instantly, and YouTube's native player controls are preserved.
+            </p>
+          </div>
+          <div class="banner-shortcut">
+            <kbd>Alt</kbd> + <kbd>W</kbd>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section: Learning Queue -->
+      <section id="section-learning" class="content-section">
+        <header class="section-header">
+          <div>
+            <h1>Learning Queue</h1>
+            <p class="subtitle">Your curated list of videos to watch intentionally.</p>
+          </div>
+        </header>
+
+        <!-- Add item manual form -->
+        <div class="card add-item-card">
+          <h3>Add Video to Queue</h3>
+          <form id="add-video-form" class="form-row">
+            <input type="url" id="queue-input-url" placeholder="YouTube Video URL (https://www.youtube.com/watch?v=...)" required>
+            <input type="text" id="queue-input-title" placeholder="Title (e.g. Python Async Tutorial)" required>
+            <input type="text" id="queue-input-channel" placeholder="Channel / Topic">
+            <button type="submit" class="btn btn-primary">Add Video</button>
+          </form>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>Queued Videos</h3>
+            <span id="queue-total-time" class="text-muted">Total: 0m</span>
+          </div>
+          <div id="full-queue-list" class="queue-list-container">
+            <!-- Dynamic items -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Section: Focus & Distractions -->
+      <section id="section-focus" class="content-section">
+        <header class="section-header">
+          <div>
+            <h1>Focus &amp; Distraction Filters</h1>
+            <p class="subtitle">Customize which algorithmic elements are removed from YouTube.</p>
+          </div>
+        </header>
+
+        <div class="card settings-card">
+          <div class="setting-row">
+            <div>
+              <div class="setting-title">Global Focus Mode</div>
+              <div class="setting-desc">Master switch for all distraction removal rules.</div>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="dash-focus-mode">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-row">
+            <div>
+              <div class="setting-title">Hide Home Algorithmic Feed</div>
+              <div class="setting-desc">Replaces home feed with an intentional search hub.</div>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="dash-hide-home">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-row">
+            <div>
+              <div class="setting-title">Block Shorts Navigation &amp; Shelves</div>
+              <div class="setting-desc">Removes Shorts carousels and redirects short links to standard watch page.</div>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="dash-hide-shorts">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-row">
+            <div>
+              <div class="setting-title">Hide Recommended Videos on Watch Page</div>
+              <div class="setting-desc">Removes the infinite sidebar recommendations (preserves playlist panels).</div>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="dash-hide-recs">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-row">
+            <div>
+              <div class="setting-title">Hide End-Screen Video Tiles</div>
+              <div class="setting-desc">Removes recommendation overlays that appear during the last seconds of playback.</div>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="dash-hide-endscreens">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-row">
+            <div>
+              <div class="setting-title">Hide Comments Section</div>
+              <div class="setting-desc">Prevents getting drawn into discussion threads while learning.</div>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="dash-hide-comments">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section: Time Management (Foundations) -->
+      <section id="section-limits" class="content-section">
+        <header class="section-header">
+          <div>
+            <h1>Time Management</h1>
+            <p class="subtitle">Set healthy boundaries for your daily YouTube viewing.</p>
+          </div>
+        </header>
+
+        <div class="card settings-card">
+          <div class="setting-row">
+            <div>
+              <div class="setting-title">Daily YouTube Limit</div>
+              <div class="setting-desc">Maximum minutes of active viewing allowed per day.</div>
+            </div>
+            <div class="input-with-unit">
+              <input type="number" id="dash-daily-limit" min="15" max="720" step="15" value="90">
+              <span>minutes</span>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <div>
+              <div class="setting-title">Warning Threshold</div>
+              <div class="setting-desc">Gentle reminder before your limit is reached.</div>
+            </div>
+            <div class="input-with-unit">
+              <input type="number" id="dash-warning-limit" min="10" max="700" step="5" value="75">
+              <span>minutes</span>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <div>
+              <div class="setting-title">Continuous Watch Cooldown</div>
+              <div class="setting-desc">Recommend a break after consecutive viewing.</div>
+            </div>
+            <div class="input-with-unit">
+              <input type="number" id="dash-cooldown-watch" min="15" max="180" step="5" value="45">
+              <span>minutes</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section: Settings & Data -->
+      <section id="section-settings" class="content-section">
+        <header class="section-header">
+          <div>
+            <h1>Preferences &amp; Privacy</h1>
+            <p class="subtitle">Manage local storage and data retention.</p>
+          </div>
+        </header>
+
+        <div class="card settings-card">
+          <div class="setting-row">
+            <div>
+              <div class="setting-title">Export All Local Data</div>
+              <div class="setting-desc">Download your settings, stats, and learning queue as JSON.</div>
+            </div>
+            <button type="button" class="btn btn-secondary" id="btn-export-data">Export Data</button>
+          </div>
+
+          <div class="setting-row">
+            <div>
+              <div class="setting-title">Reset to Default Settings</div>
+              <div class="setting-desc">Restores extension options to factory defaults.</div>
+            </div>
+            <button type="button" class="btn btn-secondary" id="btn-reset-defaults">Reset Defaults</button>
+          </div>
+
+          <div class="setting-row">
+            <div>
+              <div class="setting-title text-danger">Clear All Stored Data</div>
+              <div class="setting-desc">Deletes all local analytics and queue items permanently.</div>
+            </div>
+            <button type="button" class="btn btn-danger" id="btn-clear-all">Clear All Data</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="../shared/constants.js"></script>
+  <script src="../shared/storage.js"></script>
+  <script src="dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,409 @@
+/**
+ * YouTube Focus - Content Styles
+ * Production-grade styles for Window Fullscreen and Focus Mode.
+ */
+
+/* ==========================================================================
+   1. WINDOW FULLSCREEN MODE
+   ========================================================================== */
+
+/* Lock viewport and scroll when Window Fullscreen is active */
+html.yt-focus-window-fullscreen,
+body.yt-focus-window-fullscreen {
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background-color: #000000 !important;
+}
+
+/* Hide surrounding YouTube clutter */
+body.yt-focus-window-fullscreen #masthead-container,
+body.yt-focus-window-fullscreen #masthead,
+body.yt-focus-window-fullscreen #primary #below,
+body.yt-focus-window-fullscreen #secondary,
+body.yt-focus-window-fullscreen #chat-container,
+body.yt-focus-window-fullscreen ytd-live-chat-frame,
+body.yt-focus-window-fullscreen #guide,
+body.yt-focus-window-fullscreen ytd-mini-guide-renderer,
+body.yt-focus-window-fullscreen ytd-engagement-panel-section-list-renderer,
+body.yt-focus-window-fullscreen #ticket-shelf {
+  display: none !important;
+}
+
+/* Expand Watch Flexy containers to full screen */
+body.yt-focus-window-fullscreen ytd-watch-flexy {
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: 100vw !important;
+  max-height: 100vh !important;
+  min-height: 100vh !important;
+  overflow: hidden !important;
+}
+
+body.yt-focus-window-fullscreen #player-theater-container,
+body.yt-focus-window-fullscreen #player-container-outer,
+body.yt-focus-window-fullscreen #player-container-inner,
+body.yt-focus-window-fullscreen #player-container,
+body.yt-focus-window-fullscreen #full-bleed-container {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: 100vw !important;
+  max-height: 100vh !important;
+  min-height: 100vh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  z-index: 2147483640 !important;
+  background: #000000 !important;
+}
+
+/* Video Player itself */
+body.yt-focus-window-fullscreen #movie_player {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: 100vw !important;
+  max-height: 100vh !important;
+  z-index: 2147483641 !important;
+  background: #000000 !important;
+}
+
+/* HTML5 video element */
+body.yt-focus-window-fullscreen #movie_player video.html5-main-video {
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  object-fit: contain !important;
+}
+
+/* Player control chrome bottom */
+body.yt-focus-window-fullscreen #movie_player .ytp-chrome-bottom {
+  width: calc(100vw - 28px) !important;
+  left: 14px !important;
+  bottom: 0 !important;
+}
+
+/* Keep captions and popup menus on top */
+body.yt-focus-window-fullscreen .ytp-caption-window-container {
+  z-index: 2147483642 !important;
+}
+
+body.yt-focus-window-fullscreen .ytp-popup {
+  z-index: 2147483645 !important;
+}
+
+/* ==========================================================================
+   2. FOCUS MODE
+   ========================================================================== */
+
+/* Distraction hiding on Home Browse page */
+body.yt-focus-mode-active ytd-browse[page-subtype="home"] #contents,
+body.yt-focus-mode-active ytd-browse[page-subtype="home"] ytd-rich-grid-renderer > #contents,
+body.yt-focus-mode-active ytd-browse[page-subtype="home"] #chips-wrapper,
+body.yt-focus-mode-active ytd-browse[page-subtype="home"] #header {
+  display: none !important;
+}
+
+/* If user deliberately clicks "Show Feed Temporarily" */
+body.yt-focus-mode-active.yt-focus-temp-feed-revealed ytd-browse[page-subtype="home"] #contents,
+body.yt-focus-mode-active.yt-focus-temp-feed-revealed ytd-browse[page-subtype="home"] ytd-rich-grid-renderer > #contents {
+  display: flex !important;
+}
+
+/* Hide recommended / related videos on watch page */
+body.yt-focus-mode-active ytd-watch-flexy #secondary #related,
+body.yt-focus-mode-active ytd-watch-flexy #secondary ytd-watch-next-secondary-results-renderer {
+  display: none !important;
+}
+
+/* CRITICAL: Ensure Course / Playlist Panels remain visible! */
+body.yt-focus-mode-active ytd-watch-flexy #secondary ytd-playlist-panel-renderer {
+  display: block !important;
+  visibility: visible !important;
+  margin-top: 12px !important;
+}
+
+/* Hide Shorts entry points */
+body.yt-focus-mode-active ytd-guide-entry-renderer:has(a[href^="/shorts"]),
+body.yt-focus-mode-active ytd-mini-guide-entry-renderer[aria-label="Shorts"],
+body.yt-focus-mode-active ytd-mini-guide-entry-renderer:has(a[href^="/shorts"]),
+body.yt-focus-mode-active a[title="Shorts"],
+body.yt-focus-mode-active ytd-reel-shelf-renderer,
+body.yt-focus-mode-active ytd-rich-shelf-renderer[is-shorts] {
+  display: none !important;
+}
+
+/* Hide End Screen recommendation tiles */
+body.yt-focus-mode-active .ytp-ce-element,
+body.yt-focus-mode-active .ytp-endscreen-content {
+  display: none !important;
+}
+
+/* Hide Comments when comment hiding is active */
+body.yt-focus-hide-comments #comments,
+body.yt-focus-hide-comments ytd-comments {
+  display: none !important;
+}
+
+/* Soften notification bell badge distraction */
+body.yt-focus-mode-active .yt-spec-icon-badge-shape__badge {
+  opacity: 0.25 !important;
+  transition: opacity 0.2s ease;
+}
+body.yt-focus-mode-active .yt-spec-icon-badge-shape__badge:hover {
+  opacity: 1 !important;
+}
+
+/* ==========================================================================
+   3. INJECTED UI: PLAYER WINDOW FULLSCREEN BUTTON
+   ========================================================================== */
+
+.ytp-button.yt-focus-player-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: top;
+  cursor: pointer;
+  width: 48px;
+  height: 100%;
+  opacity: 0.88;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.ytp-button.yt-focus-player-btn:hover {
+  opacity: 1;
+  transform: scale(1.06);
+}
+
+.ytp-button.yt-focus-player-btn svg {
+  fill: #ffffff;
+  width: 22px;
+  height: 22px;
+}
+
+.ytp-button.yt-focus-player-btn.active svg {
+  fill: #3b82f6; /* Accent color when active */
+}
+
+/* ==========================================================================
+   4. INJECTED UI: FLOATING FOCUS MODE STATUS PILL
+   ========================================================================== */
+
+#yt-focus-status-pill {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 2147483630;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: #e2e8f0;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 0.9;
+}
+
+#yt-focus-status-pill:hover {
+  opacity: 1;
+  transform: translateY(-2px);
+  border-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+}
+
+#yt-focus-status-pill .status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #10b981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+}
+
+#yt-focus-status-pill.paused .status-dot {
+  background-color: #94a3b8;
+  box-shadow: none;
+}
+
+#yt-focus-status-pill .pill-text {
+  letter-spacing: 0.02em;
+}
+
+/* Hide status pill in window fullscreen to avoid overlay on video */
+body.yt-focus-window-fullscreen #yt-focus-status-pill {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   5. INJECTED UI: INTENTIONAL HOME FOCUS HUB
+   ========================================================================== */
+
+#yt-focus-home-hub {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  max-width: 680px;
+  margin: 60px auto 40px auto;
+  padding: 48px 36px;
+  background: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #f8fafc;
+  animation: ytFocusFadeIn 0.3s ease-out;
+}
+
+@keyframes ytFocusFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.yt-focus-hub-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  color: #60a5fa;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 16px;
+}
+
+.yt-focus-hub-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin: 0 0 8px 0;
+  letter-spacing: -0.01em;
+}
+
+.yt-focus-hub-subtitle {
+  font-size: 14px;
+  color: #94a3b8;
+  margin: 0 0 28px 0;
+  line-height: 1.5;
+}
+
+.yt-focus-hub-search-form {
+  display: flex;
+  width: 100%;
+  max-width: 520px;
+  margin-bottom: 24px;
+  border-radius: 10px;
+  background: #1e293b;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.yt-focus-hub-search-form:focus-within {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.yt-focus-hub-search-input {
+  flex: 1;
+  padding: 12px 18px;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  color: #f8fafc;
+}
+
+.yt-focus-hub-search-input::placeholder {
+  color: #64748b;
+}
+
+.yt-focus-hub-search-btn {
+  padding: 0 20px;
+  background: #3b82f6;
+  border: none;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.yt-focus-hub-search-btn:hover {
+  background: #2563eb;
+}
+
+.yt-focus-hub-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.yt-focus-hub-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #1e293b;
+  color: #cbd5e1;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.yt-focus-hub-btn:hover {
+  background: #334155;
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.yt-focus-hub-toggle-feed-btn {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 12px;
+  cursor: pointer;
+  text-decoration: underline;
+  transition: color 0.15s ease;
+}
+
+.yt-focus-hub-toggle-feed-btn:hover {
+  color: #94a3b8;
+}

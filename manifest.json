@@ -1,0 +1,69 @@
+{
+  "manifest_version": 3,
+  "name": "YouTube Focus — Intentional Learning & Video Player",
+  "version": "1.0.0",
+  "description": "Privacy-first productivity and focus layer for YouTube. Watch intentionally with Window Fullscreen, distraction blocking, and learning tools.",
+  "icons": {
+    "16": "src/icons/icon-16.png",
+    "32": "src/icons/icon-32.png",
+    "48": "src/icons/icon-48.png",
+    "128": "src/icons/icon-128.png"
+  },
+  "action": {
+    "default_popup": "src/popup/popup.html",
+    "default_icon": {
+      "16": "src/icons/icon-16.png",
+      "32": "src/icons/icon-32.png",
+      "48": "src/icons/icon-48.png",
+      "128": "src/icons/icon-128.png"
+    },
+    "default_title": "YouTube Focus"
+  },
+  "options_ui": {
+    "page": "src/dashboard/dashboard.html",
+    "open_in_tab": true
+  },
+  "background": {
+    "service_worker": "src/background/service-worker.js"
+  },
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://www.youtube.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.youtube.com/*"
+      ],
+      "js": [
+        "src/shared/constants.js",
+        "src/shared/logger.js",
+        "src/shared/storage.js",
+        "src/content/youtube.js"
+      ],
+      "css": [
+        "src/content/youtube.css"
+      ],
+      "run_at": "document_start"
+    }
+  ],
+  "commands": {
+    "toggle-window-fullscreen": {
+      "suggested_key": {
+        "default": "Alt+W",
+        "mac": "Alt+W"
+      },
+      "description": "Toggle Window Fullscreen on YouTube"
+    },
+    "toggle-focus-mode": {
+      "suggested_key": {
+        "default": "Alt+F",
+        "mac": "Alt+F"
+      },
+      "description": "Toggle Focus Mode on YouTube"
+    }
+  }
+}
