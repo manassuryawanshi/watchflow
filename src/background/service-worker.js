@@ -81,5 +81,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
+  if (message.action === 'OPEN_DASHBOARD') {
+    chrome.runtime.openOptionsPage();
+    sendResponse({ success: true });
+    return true;
+  }
+
   return false;
 });

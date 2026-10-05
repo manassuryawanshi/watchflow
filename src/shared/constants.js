@@ -12,18 +12,26 @@
     TOGGLE_FULLSCREEN: 'TOGGLE_FULLSCREEN',
     TOGGLE_FOCUS: 'TOGGLE_FOCUS',
     ADD_TO_QUEUE: 'ADD_TO_QUEUE',
+    ADD_PLAYLIST_TO_QUEUE: 'ADD_PLAYLIST_TO_QUEUE',
+    AUTO_COMPLETE_VIDEO: 'AUTO_COMPLETE_VIDEO',
     GET_PAGE_STATUS: 'GET_STATUS',
     TOGGLE_WINDOW_FULLSCREEN: 'TOGGLE_FULLSCREEN',
     TOGGLE_FOCUS_MODE: 'TOGGLE_FOCUS',
     GET_CURRENT_VIDEO_INFO: 'GET_CURRENT_VIDEO_INFO',
     ADD_CURRENT_TO_QUEUE: 'ADD_TO_QUEUE',
     SETTINGS_CHANGED: 'SETTINGS_CHANGED',
+    CHECK_LIMITS: 'CHECK_LIMITS',
+    TRIGGER_COOLDOWN: 'TRIGGER_COOLDOWN',
+    DISMISS_COOLDOWN: 'DISMISS_COOLDOWN'
   };
 
   const STORAGE_KEYS = {
     SETTINGS: 'yt_focus_settings',
     DAILY_STATS: 'yt_focus_daily_stats',
     LEARNING_QUEUE: 'yt_focus_learning_queue',
+    WATCH_SESSIONS: 'yt_focus_watch_sessions',
+    SCHEDULES: 'yt_focus_schedules',
+    COOLDOWN_STATE: 'yt_focus_cooldown_state'
   };
 
   const DEFAULT_SETTINGS = {
@@ -44,11 +52,20 @@
     showStatusIndicator: true,
     enableKeyboardShortcuts: true,
 
-    // Time Management (Foundations)
-    dailyLimitMinutes: 90,
-    dailyWarningMinutes: 75,
+    // Time Management & Limits
+    dailyLimitMinutes: 60,
+    dailyWarningMinutes: 45,
+    warningThresholdPct: 75,
+    limitMode: 'soft', // 'soft' (warnings only) | 'hard' (cooldown & blocking)
+    cooldownMinutes: 10,
     cooldownWatchMinutes: 45,
     cooldownBreakMinutes: 10,
+
+    // Learning & Queue Intelligence
+    autoCompleteThreshold: 0.9, // 90% watched marks video as completed
+    courseModeEnabled: true,
+
+    // Scheduling
     scheduleEnabled: false,
     scheduleBlocks: [],
 
@@ -107,6 +124,13 @@
     PLAYER_BUTTON_ACTIVE: 'yt-focus-player-btn-active',
     STATUS_PILL: 'yt-focus-status-pill',
     HOME_FOCUS_HUB: 'yt-focus-home-hub',
+    COOLDOWN_OVERLAY: 'yt-focus-cooldown-overlay',
+    SCHEDULE_OVERLAY: 'yt-focus-schedule-overlay',
+    COURSE_BANNER: 'yt-focus-course-banner',
+    QUICK_ADD_BTN: 'yt-focus-quick-add-btn',
+    QUICK_ADD_PLAYLIST_BTN: 'yt-focus-quick-playlist-btn',
+    TOAST_CONTAINER: 'yt-focus-toast-container',
+    TOAST: 'yt-focus-toast',
   };
 
   const SHORTCUTS = {

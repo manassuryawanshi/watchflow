@@ -28,7 +28,14 @@
             <path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12z"/>
           </svg>
           <span>Learning Queue</span>
-          <span class="badge" id="nav-queue-count">0</span>
+          <span class="badge badge-blue" id="nav-queue-count">0</span>
+        </button>
+
+        <button type="button" class="nav-item" data-section="analytics">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+          </svg>
+          <span>Analytics</span>
         </button>
 
         <button type="button" class="nav-item" data-section="focus">
@@ -42,7 +49,14 @@
           <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
             <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
           </svg>
-          <span>Time Management</span>
+          <span>Time & Cooldown</span>
+        </button>
+
+        <button type="button" class="nav-item" data-section="schedules">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+            <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z"/>
+          </svg>
+          <span>Schedules</span>
         </button>
 
         <button type="button" class="nav-item" data-section="settings">
@@ -61,17 +75,17 @@
       </div>
     </aside>
 
-    <!-- Main Content Area -->
+    <!-- Main Content -->
     <main class="main-content">
       <!-- Section: Overview -->
       <section id="section-overview" class="content-section active">
         <header class="section-header">
           <div>
             <h1>Overview</h1>
-            <p class="subtitle">Intentional viewing metrics and core controls.</p>
+            <p class="subtitle">Take control of your YouTube time. Watch intentionally.</p>
           </div>
           <div class="header-actions">
-            <a href="https://www.youtube.com" target="_blank" class="btn btn-primary">
+            <a href="https://www.youtube.com" target="_blank" class="btn btn-secondary">
               <span>Open YouTube</span>
               <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
                 <path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/>
@@ -80,12 +94,37 @@
           </div>
         </header>
 
+        <!-- Hero Card -->
+        <div class="hero-card">
+          <div class="hero-text">
+            <h2>Watch Intentionally. Not Endlessly.</h2>
+            <p>
+              Transform YouTube from an endless algorithmic loop into a focused learning workspace with Window Fullscreen, distraction filters, and custom queues.
+            </p>
+          </div>
+          <div class="hero-actions">
+            <button type="button" class="btn btn-primary" id="hero-btn-continue">
+              <span>Continue Learning</span>
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            </button>
+          </div>
+        </div>
+
         <!-- KPI Cards -->
         <div class="kpi-grid">
           <div class="kpi-card">
             <span class="kpi-label">Today's Watch Time</span>
             <div class="kpi-val" id="ov-watch-time">0m</div>
-            <span class="kpi-sub" id="ov-watch-sub">Goal: 90m</span>
+            <span class="kpi-sub" id="ov-watch-sub">Limit: 60m</span>
+            <div class="progress-bar-container">
+              <div class="progress-bar-fill" id="ov-watch-bar" style="width: 0%;"></div>
+            </div>
+          </div>
+
+          <div class="kpi-card">
+            <span class="kpi-label">Focused Viewing</span>
+            <div class="kpi-val text-accent" id="ov-focus-time">0m</div>
+            <span class="kpi-sub" id="ov-focus-pct">0% of today's time</span>
           </div>
 
           <div class="kpi-card">
@@ -96,28 +135,50 @@
 
           <div class="kpi-card">
             <span class="kpi-label">Focus Mode Status</span>
-            <div class="kpi-val text-accent" id="ov-focus-status">Active</div>
-            <span class="kpi-sub">Distractions blocked</span>
-          </div>
-
-          <div class="kpi-card">
-            <span class="kpi-label">Window Fullscreen</span>
-            <div class="kpi-val" id="ov-fs-status">Ready</div>
-            <span class="kpi-sub">Shortcut: W</span>
+            <div class="kpi-val text-emerald" id="ov-focus-status">Active</div>
+            <span class="kpi-sub">Recommendations hidden</span>
           </div>
         </div>
 
-        <!-- Window Fullscreen Spotlight Banner -->
+        <!-- Continue Learning Spotlight Card (Visible when items in queue) -->
+        <div class="card" id="spotlight-card">
+          <div class="card-header">
+            <h3>Continue Learning</h3>
+            <span class="badge badge-blue" id="spotlight-type-badge">Next Video</span>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 20px;">
+            <div>
+              <h4 id="spotlight-title" style="font-size: 16px; margin-bottom: 4px; color: #fff;">Queue is empty</h4>
+              <p id="spotlight-meta" style="font-size: 13px; color: var(--text-sub);">Add videos or playlists from YouTube or the Learning Queue tab.</p>
+            </div>
+            <a href="#" target="_blank" class="btn btn-primary" id="spotlight-action-btn" style="flex-shrink: 0;">
+              <span>Start Watching</span>
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
+            </a>
+          </div>
+        </div>
+
+        <!-- Window Fullscreen Banner -->
         <div class="feature-banner">
           <div class="banner-text">
             <h3>Window Fullscreen Mode</h3>
             <p>
-              Fills your entire browser window with the video while keeping your Chrome tabs and URL bar visible.
-              Escape key exits instantly, and YouTube's native player controls are preserved.
+              Fill your entire browser window with the video while keeping your Chrome tabs and URL bar visible. Press <kbd>W</kbd> on any YouTube watch page to toggle. Escape key exits instantly.
             </p>
           </div>
           <div class="banner-shortcut">
             <kbd>W</kbd>
+          </div>
+        </div>
+
+        <!-- Recent Activity Card -->
+        <div class="card">
+          <div class="card-header">
+            <h3>Recent Activity</h3>
+            <span class="text-muted" id="ov-activity-sub">Latest sessions</span>
+          </div>
+          <div id="recent-activity-list" class="queue-list-container">
+            <!-- Dynamic recent sessions -->
           </div>
         </div>
       </section>
@@ -127,28 +188,109 @@
         <header class="section-header">
           <div>
             <h1>Learning Queue</h1>
-            <p class="subtitle">Your curated list of videos to watch intentionally.</p>
+            <p class="subtitle">Structured study queue for individual videos and full playlists.</p>
+          </div>
+          <div class="header-actions">
+            <button type="button" class="btn btn-secondary" id="btn-show-add-video">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+              <span>Add Video</span>
+            </button>
+            <button type="button" class="btn btn-primary" id="btn-show-add-playlist">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+              <span>Add Playlist</span>
+            </button>
           </div>
         </header>
 
-        <!-- Add item manual form -->
-        <div class="card add-item-card">
-          <h3>Add Video to Queue</h3>
-          <form id="add-video-form" class="form-row">
-            <input type="url" id="queue-input-url" placeholder="YouTube Video URL (https://www.youtube.com/watch?v=...)" required>
-            <input type="text" id="queue-input-title" placeholder="Title (e.g. Python Async Tutorial)" required>
-            <input type="text" id="queue-input-channel" placeholder="Channel / Topic">
-            <button type="submit" class="btn btn-primary">Add Video</button>
-          </form>
+        <!-- Queue Summary Bar -->
+        <div class="kpi-grid" style="margin-bottom: 20px;">
+          <div class="kpi-card" style="padding: 16px;">
+            <span class="kpi-label">Total Videos</span>
+            <div class="kpi-val" id="queue-intel-videos" style="font-size: 22px;">0</div>
+            <span class="kpi-sub" id="queue-intel-remaining">0 remaining</span>
+          </div>
+          <div class="kpi-card" style="padding: 16px;">
+            <span class="kpi-label">Playlists</span>
+            <div class="kpi-val text-accent" id="queue-intel-playlists" style="font-size: 22px;">0</div>
+            <span class="kpi-sub" id="queue-intel-pl-completed">0 completed</span>
+          </div>
+          <div class="kpi-card" style="padding: 16px;">
+            <span class="kpi-label">Estimated Time</span>
+            <div class="kpi-val" id="queue-intel-time" style="font-size: 22px;">0m</div>
+            <span class="kpi-sub" id="queue-intel-time-rem">0m remaining</span>
+          </div>
+          <div class="kpi-card" style="padding: 16px;">
+            <span class="kpi-label">Completion Rate</span>
+            <div class="kpi-val text-emerald" id="queue-intel-pct" style="font-size: 22px;">0%</div>
+            <div class="progress-bar-container">
+              <div class="progress-bar-fill" id="queue-intel-bar" style="width: 0%;"></div>
+            </div>
+          </div>
         </div>
 
-        <div class="card">
-          <div class="card-header">
-            <h3>Queued Videos</h3>
-            <span id="queue-total-time" class="text-muted">Total: 0m</span>
+        <!-- Filter Tabs -->
+        <div class="filter-tabs">
+          <button type="button" class="filter-tab active" data-filter="all">All Items</button>
+          <button type="button" class="filter-tab" data-filter="video">Videos</button>
+          <button type="button" class="filter-tab" data-filter="playlist">Playlists</button>
+          <button type="button" class="filter-tab" data-filter="inprogress">In Progress</button>
+          <button type="button" class="filter-tab" data-filter="completed">Completed</button>
+        </div>
+
+        <!-- Queue List -->
+        <div id="learning-queue-list" class="queue-list-container">
+          <!-- Dynamic queue cards -->
+        </div>
+      </section>
+
+      <!-- Section: Analytics -->
+      <section id="section-analytics" class="content-section">
+        <header class="section-header">
+          <div>
+            <h1>Watch-Time Analytics</h1>
+            <p class="subtitle">Understand exactly where your YouTube time goes. Calculated 100% locally.</p>
           </div>
-          <div id="full-queue-list" class="queue-list-container">
-            <!-- Dynamic items -->
+          <div class="header-actions">
+            <div class="filter-tabs" style="margin: 0; border: none; padding: 0;">
+              <button type="button" class="filter-tab" data-range="today">Today</button>
+              <button type="button" class="filter-tab active" data-range="7d">Last 7 Days</button>
+              <button type="button" class="filter-tab" data-range="30d">Last 30 Days</button>
+            </div>
+          </div>
+        </header>
+
+        <!-- Analytics Stats Grid -->
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <span class="kpi-label">Total YouTube Time</span>
+            <div class="kpi-val" id="an-total-time">0m</div>
+            <span class="kpi-sub" id="an-period-label">Last 7 days</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Focused Time</span>
+            <div class="kpi-val text-accent" id="an-focus-time">0m</div>
+            <span class="kpi-sub" id="an-focus-pct">0% of total</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Learning Queue Time</span>
+            <div class="kpi-val text-emerald" id="an-learning-time">0m</div>
+            <span class="kpi-sub" id="an-learning-pct">0% of total</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Avg Session</span>
+            <div class="kpi-val" id="an-avg-session">0m</div>
+            <span class="kpi-sub" id="an-longest-session">Longest: 0m</span>
+          </div>
+        </div>
+
+        <!-- Chart Card -->
+        <div class="card chart-card">
+          <div class="card-header">
+            <h3>Daily Watch Time</h3>
+            <span class="text-muted" style="font-size: 12px;">Blue: Total Watch Time • Light Blue: Focused</span>
+          </div>
+          <div class="bar-chart" id="analytics-bar-chart">
+            <!-- Dynamic chart bars -->
           </div>
         </div>
       </section>
@@ -177,7 +319,7 @@
           <div class="setting-row">
             <div>
               <div class="setting-title">Hide Home Algorithmic Feed</div>
-              <div class="setting-desc">Replaces home feed with an intentional search hub.</div>
+              <div class="setting-desc">Replaces the infinite homepage feed with an intentional search hub and learning links.</div>
             </div>
             <label class="switch">
               <input type="checkbox" id="dash-hide-home">
@@ -188,7 +330,7 @@
           <div class="setting-row">
             <div>
               <div class="setting-title">Block Shorts Navigation &amp; Shelves</div>
-              <div class="setting-desc">Removes Shorts carousels and redirects short links to standard watch page.</div>
+              <div class="setting-desc">Hides Shorts carousels and automatically redirects shorts links to the standard watch page.</div>
             </div>
             <label class="switch">
               <input type="checkbox" id="dash-hide-shorts">
@@ -199,7 +341,7 @@
           <div class="setting-row">
             <div>
               <div class="setting-title">Hide Recommended Videos on Watch Page</div>
-              <div class="setting-desc">Removes the infinite sidebar recommendations (preserves playlist panels).</div>
+              <div class="setting-desc">Removes the infinite sidebar recommendations while preserving playlist course panels.</div>
             </div>
             <label class="switch">
               <input type="checkbox" id="dash-hide-recs">
@@ -210,7 +352,7 @@
           <div class="setting-row">
             <div>
               <div class="setting-title">Hide End-Screen Video Tiles</div>
-              <div class="setting-desc">Removes recommendation overlays that appear during the last seconds of playback.</div>
+              <div class="setting-desc">Removes recommendation overlays that appear during the last seconds of video playback.</div>
             </div>
             <label class="switch">
               <input type="checkbox" id="dash-hide-endscreens">
@@ -221,7 +363,7 @@
           <div class="setting-row">
             <div>
               <div class="setting-title">Hide Comments Section</div>
-              <div class="setting-desc">Prevents getting drawn into discussion threads while learning.</div>
+              <div class="setting-desc">Prevents getting drawn into infinite comment threads while learning.</div>
             </div>
             <label class="switch">
               <input type="checkbox" id="dash-hide-comments">
@@ -231,12 +373,12 @@
         </div>
       </section>
 
-      <!-- Section: Time Management (Foundations) -->
+      <!-- Section: Time & Cooldown -->
       <section id="section-limits" class="content-section">
         <header class="section-header">
           <div>
-            <h1>Time Management</h1>
-            <p class="subtitle">Set healthy boundaries for your daily YouTube viewing.</p>
+            <h1>Time Management &amp; Cooldown</h1>
+            <p class="subtitle">Set healthy daily boundaries and cooldown breaks to prevent binge watching.</p>
           </div>
         </header>
 
@@ -244,74 +386,258 @@
           <div class="setting-row">
             <div>
               <div class="setting-title">Daily YouTube Limit</div>
-              <div class="setting-desc">Maximum minutes of active viewing allowed per day.</div>
+              <div class="setting-desc">Maximum minutes of active viewing allowed per day across YouTube.</div>
             </div>
-            <div class="input-with-unit">
-              <input type="number" id="dash-daily-limit" min="15" max="720" step="15" value="90">
-              <span>minutes</span>
-            </div>
-          </div>
-
-          <div class="setting-row">
-            <div>
-              <div class="setting-title">Warning Threshold</div>
-              <div class="setting-desc">Gentle reminder before your limit is reached.</div>
-            </div>
-            <div class="input-with-unit">
-              <input type="number" id="dash-warning-limit" min="10" max="700" step="5" value="75">
-              <span>minutes</span>
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
+              <div class="limit-preset-group">
+                <button type="button" class="preset-btn" data-limit="30">30m</button>
+                <button type="button" class="preset-btn" data-limit="45">45m</button>
+                <button type="button" class="preset-btn" data-limit="60">60m</button>
+                <button type="button" class="preset-btn active" data-limit="90">90m</button>
+                <button type="button" class="preset-btn" data-limit="120">120m</button>
+              </div>
+              <div class="input-with-unit">
+                <input type="number" id="dash-daily-limit" min="15" max="720" step="5" value="60">
+                <span>mins</span>
+              </div>
             </div>
           </div>
 
           <div class="setting-row">
             <div>
-              <div class="setting-title">Continuous Watch Cooldown</div>
-              <div class="setting-desc">Recommend a break after consecutive viewing.</div>
+              <div class="setting-title">Limit Mode: Soft vs. Hard Limit</div>
+              <div class="setting-desc">
+                <strong>Soft Limit:</strong> Shows gentle reminders and encourages pausing.<br>
+                <strong>Hard Limit:</strong> Triggers a mandatory cooldown break and pauses playback when the limit is reached.
+              </div>
+            </div>
+            <div style="display: flex; gap: 10px;">
+              <button type="button" class="btn btn-secondary active" id="btn-mode-soft">Soft Limit</button>
+              <button type="button" class="btn btn-secondary" id="btn-mode-hard">Hard Limit</button>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <div>
+              <div class="setting-title">Warning Thresholds</div>
+              <div class="setting-desc">Receive notifications at 75% and 90% (10 minutes remaining) before reaching your limit.</div>
             </div>
             <div class="input-with-unit">
-              <input type="number" id="dash-cooldown-watch" min="15" max="180" step="5" value="45">
-              <span>minutes</span>
+              <input type="number" id="dash-warning-limit" min="10" max="700" step="5" value="45">
+              <span>mins</span>
             </div>
+          </div>
+
+          <div class="setting-row">
+            <div>
+              <div class="setting-title">Cooldown Break Duration</div>
+              <div class="setting-desc">Required pause duration before continuing when hard limit is hit.</div>
+            </div>
+            <div class="input-with-unit">
+              <input type="number" id="dash-cooldown-mins" min="5" max="60" step="5" value="10">
+              <span>mins</span>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <div>
+              <div class="setting-title">Test Cooldown Screen</div>
+              <div class="setting-desc">Preview the calming cooldown screen that appears when breaks are triggered.</div>
+            </div>
+            <button type="button" class="btn btn-secondary" id="btn-test-cooldown">Test Cooldown Now</button>
           </div>
         </div>
       </section>
 
-      <!-- Section: Settings & Data -->
+      <!-- Section: Schedules -->
+      <section id="section-schedules" class="content-section">
+        <header class="section-header">
+          <div>
+            <h1>Scheduled Focus &amp; Blocking</h1>
+            <p class="subtitle">Automatically enable Focus Mode or block YouTube during specific hours (e.g. Study or Sleep).</p>
+          </div>
+          <div class="header-actions">
+            <button type="button" class="btn btn-primary" id="btn-show-add-schedule">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+              <span>Add Schedule</span>
+            </button>
+          </div>
+        </header>
+
+        <div class="card settings-card" style="margin-bottom: 20px;">
+          <div class="setting-row">
+            <div>
+              <div class="setting-title">Enable Scheduled Automation</div>
+              <div class="setting-desc">Master switch to enforce scheduled focus or blocking based on your local time.</div>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="dash-schedule-master">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div id="schedules-list" class="queue-list-container">
+          <!-- Dynamic schedules -->
+        </div>
+      </section>
+
+      <!-- Section: Preferences & Data -->
       <section id="section-settings" class="content-section">
         <header class="section-header">
           <div>
             <h1>Preferences &amp; Privacy</h1>
-            <p class="subtitle">Manage local storage and data retention.</p>
+            <p class="subtitle">Manage local storage, course mode behavior, and data retention.</p>
           </div>
         </header>
 
         <div class="card settings-card">
           <div class="setting-row">
             <div>
+              <div class="setting-title">Course &amp; Learning Mode</div>
+              <div class="setting-desc">Displays a lesson progress banner and next-lesson shortcuts when watching playlist courses.</div>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="dash-course-mode" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-row">
+            <div>
+              <div class="setting-title">Auto-Mark Completion Threshold</div>
+              <div class="setting-desc">Automatically marks queued videos as complete when you reach 90% watched.</div>
+            </div>
+            <span class="text-accent" style="font-weight: 600;">90% watched</span>
+          </div>
+
+          <div class="setting-row">
+            <div>
               <div class="setting-title">Export All Local Data</div>
-              <div class="setting-desc">Download your settings, stats, and learning queue as JSON.</div>
+              <div class="setting-desc">Download a complete JSON backup of your settings, watch sessions, and learning queue.</div>
             </div>
-            <button type="button" class="btn btn-secondary" id="btn-export-data">Export Data</button>
+            <button type="button" class="btn btn-secondary" id="btn-export-data">Export JSON</button>
           </div>
 
           <div class="setting-row">
             <div>
-              <div class="setting-title">Reset to Default Settings</div>
-              <div class="setting-desc">Restores extension options to factory defaults.</div>
+              <div class="setting-title">Clear Watch History</div>
+              <div class="setting-desc">Deletes all recorded watch sessions and daily watch-time statistics.</div>
             </div>
-            <button type="button" class="btn btn-secondary" id="btn-reset-defaults">Reset Defaults</button>
+            <button type="button" class="btn btn-secondary" id="btn-clear-history">Clear History</button>
           </div>
 
           <div class="setting-row">
             <div>
-              <div class="setting-title text-danger">Clear All Stored Data</div>
-              <div class="setting-desc">Deletes all local analytics and queue items permanently.</div>
+              <div class="setting-title">Clear Learning Queue</div>
+              <div class="setting-desc">Deletes all individual videos and playlists from your learning queue.</div>
             </div>
-            <button type="button" class="btn btn-danger" id="btn-clear-all">Clear All Data</button>
+            <button type="button" class="btn btn-secondary" id="btn-clear-queue">Clear Queue</button>
+          </div>
+
+          <div class="setting-row">
+            <div>
+              <div class="setting-title text-danger">Reset All Extension Data</div>
+              <div class="setting-desc">Permanently wipes all local extension data and restores factory defaults.</div>
+            </div>
+            <button type="button" class="btn btn-danger" id="btn-reset-all">Reset All Data</button>
           </div>
         </div>
       </section>
     </main>
+  </div>
+
+  <!-- Modal: Add Video -->
+  <div class="modal-backdrop hidden" id="modal-add-video">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Add Video to Learning Queue</h3>
+        <button type="button" class="modal-close" id="modal-add-video-close">&times;</button>
+      </div>
+      <form class="modal-form" id="form-add-video">
+        <div>
+          <label for="input-video-url">YouTube Video URL</label>
+          <input type="url" id="input-video-url" placeholder="https://www.youtube.com/watch?v=..." required>
+        </div>
+        <div>
+          <label for="input-video-title">Title</label>
+          <input type="text" id="input-video-title" placeholder="e.g. Next.js 15 Full Tutorial" required>
+        </div>
+        <div>
+          <label for="input-video-channel">Channel / Author</label>
+          <input type="text" id="input-video-channel" placeholder="e.g. Traversy Media">
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-add-video">Cancel</button>
+          <button type="submit" class="btn btn-primary">Add Video</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Add Playlist -->
+  <div class="modal-backdrop hidden" id="modal-add-playlist">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Add Entire Playlist to Queue</h3>
+        <button type="button" class="modal-close" id="modal-add-playlist-close">&times;</button>
+      </div>
+      <form class="modal-form" id="form-add-playlist">
+        <div>
+          <label for="input-playlist-url">YouTube Playlist URL or ID</label>
+          <input type="text" id="input-playlist-url" placeholder="https://www.youtube.com/playlist?list=PL..." required>
+        </div>
+        <div>
+          <label for="input-playlist-title">Course / Playlist Title</label>
+          <input type="text" id="input-playlist-title" placeholder="e.g. Machine Learning Specialization" required>
+        </div>
+        <div>
+          <label for="input-playlist-channel">Channel / Instructor</label>
+          <input type="text" id="input-playlist-channel" placeholder="e.g. DeepLearning.AI">
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-add-playlist">Cancel</button>
+          <button type="submit" class="btn btn-primary">Add Playlist</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Add Schedule -->
+  <div class="modal-backdrop hidden" id="modal-add-schedule">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Add Schedule Block</h3>
+        <button type="button" class="modal-close" id="modal-add-schedule-close">&times;</button>
+      </div>
+      <form class="modal-form" id="form-add-schedule">
+        <div>
+          <label for="input-sch-name">Schedule Name</label>
+          <input type="text" id="input-sch-name" placeholder="e.g. Morning Study" required>
+        </div>
+        <div style="display: flex; gap: 12px;">
+          <div style="flex: 1;">
+            <label for="input-sch-start">Start Time</label>
+            <input type="time" id="input-sch-start" value="09:00" required>
+          </div>
+          <div style="flex: 1;">
+            <label for="input-sch-end">End Time</label>
+            <input type="time" id="input-sch-end" value="13:00" required>
+          </div>
+        </div>
+        <div>
+          <label for="select-sch-mode">Automation Mode</label>
+          <select id="select-sch-mode">
+            <option value="focus">Enforce Focus Mode</option>
+            <option value="block">Block YouTube Completely</option>
+          </select>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-add-sch">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Schedule</button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <script src="../shared/constants.js"></script>

@@ -70,12 +70,35 @@ Youtube-focus/
 - **End-Screen Suggestions**: Neutralizes floating promotional tiles (`.ytp-ce-element`) that clutter video conclusions.
 - **On-Screen Status Pill**: Displays an unobtrusive floating indicator (`FOCUS MODE Active`) with quick toggle support.
 
-### 3. Extension Popup & State Engine
-- Ultra-restrained dark design system with accessible contrast and micro-interactions.
-- Real-time status detection for active YouTube tabs and current video titles.
-- Quick toggles for Focus Mode and Window Fullscreen.
-- Interactive Learning Queue drawer with complete/delete capabilities.
-- Local daily watch time indicator and daily goal progress bar.
+### 3. Complete Learning Queue (Videos & Playlists)
+- **First-Class Playlists & Individual Videos**:
+  - Save individual videos or entire YouTube playlists without needing a YouTube Data API key.
+  - Logical container: Playlists stay organized with curriculum expansion, lesson checklists, and individual deletion without cluttering the queue.
+  - YouTube In-Page Quick Add: Directly click `[+ Add to Queue]` or `[+ Add Playlist to Queue]` on YouTube watch and playlist pages.
+  - Auto-Mark Completion: Automatically marks a lesson or video completed when reaching a 90% watched threshold.
+  - "Continue Learning": One-click button that resumes the next incomplete item across all queued courses.
+
+### 4. Watch-Time Tracking & Analytics
+- **Local Session Tracking**: Records viewing sessions (duration, focus status, video, date) locally in `chrome.storage.local`.
+- **Zero Telemetry**: Never sends watch history or analytics to external servers.
+- **Visual Analytics Dashboard**: Interactive charts for Today, Last 7 Days, and Last 30 Days showing total watch time, focused percentage, learning percentage, and average session length.
+
+### 5. Daily Limits, Cooldown & Scheduled Blocking
+- **Configurable Daily Limits**: Presets (30m, 45m, 60m, 90m, 120m) and custom limits with 75% and 90% gentle warnings.
+- **Soft vs. Hard Limit Modes**:
+  - **Soft Limit**: Shows gentle toast notifications and encourages pausing.
+  - **Hard Limit**: Triggers a mandatory calming Cooldown break screen with live countdown timer when the limit is exceeded.
+- **Scheduled Focus / Blocking**: Automatically activates Focus Mode or completely blocks YouTube during specific scheduled windows (e.g. Study Hours 09:00–13:00, Night Rest 22:00–07:00).
+
+### 6. Course Mode Banner
+- When playing a video that belongs to an active playlist course in your Learning Queue, a sleek Course Mode banner appears showing Lesson X of Y, percentage progress, and a direct `[Next Lesson ➔]` button.
+
+### 7. Extension Popup & State Engine
+- Minimal, premium dark design matching the Dashboard.
+- Live watch time vs. daily limit indicator.
+- Fast toggles for Window Fullscreen (`W`) and Focus Mode (`ON/OFF`).
+- Quick Actions bar (`[Window Fullscreen]`, `[Focus Mode]`, `[Add to Queue]`, `[Open Queue]`).
+- Quick Queue drawer and one-click access to the full Dashboard.
 
 ---
 

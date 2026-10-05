@@ -422,3 +422,328 @@ body.yt-focus-window-fullscreen #yt-focus-status-pill {
 .yt-focus-hub-toggle-feed-btn:hover {
   color: #94a3b8;
 }
+
+/* ==========================================================================
+   4. QUICK ADD BUTTONS (ON YOUTUBE PAGES)
+   ========================================================================== */
+
+.yt-focus-quick-add-btn,
+.yt-focus-quick-playlist-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 8px;
+  padding: 0 14px;
+  height: 36px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.08);
+  color: #f1f1f1;
+  font-family: "Roboto", "Segoe UI", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  vertical-align: middle;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+  user-select: none;
+  z-index: 20;
+}
+
+.yt-focus-quick-add-btn:hover,
+.yt-focus-quick-playlist-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.yt-focus-quick-add-btn:active,
+.yt-focus-quick-playlist-btn:active {
+  transform: translateY(0);
+}
+
+.yt-focus-quick-add-btn.queued,
+.yt-focus-quick-playlist-btn.queued {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: #3b82f6;
+  color: #60a5fa;
+}
+
+.yt-focus-quick-add-btn svg,
+.yt-focus-quick-playlist-btn svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+/* ==========================================================================
+   5. COURSE / LEARNING MODE BANNER
+   ========================================================================== */
+
+.yt-focus-course-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 12px 0 16px 0;
+  padding: 12px 18px;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.95));
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(8px);
+  z-index: 100;
+  animation: yt-focus-fade-in 0.25s ease-out;
+}
+
+.yt-focus-course-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+
+.yt-focus-course-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.yt-focus-course-badge {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(59, 130, 246, 0.25);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.4);
+}
+
+.yt-focus-course-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #f8fafc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.yt-focus-course-meta {
+  font-size: 12px;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.yt-focus-course-progress-bar {
+  width: 140px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.yt-focus-course-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.yt-focus-course-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  background: #3b82f6;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+  white-space: nowrap;
+}
+
+.yt-focus-course-action-btn:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   6. COOLDOWN & SCHEDULE OVERLAYS
+   ========================================================================== */
+
+.yt-focus-cooldown-overlay,
+.yt-focus-schedule-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: rgba(10, 10, 12, 0.96) !important;
+  backdrop-filter: blur(16px) !important;
+  z-index: 2147483647 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  color: #f1f5f9 !important;
+  animation: yt-focus-fade-in 0.3s ease-out;
+}
+
+.yt-focus-overlay-card {
+  max-width: 480px;
+  width: 90%;
+  padding: 36px 32px;
+  background: #18181b;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  text-align: center;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+}
+
+.yt-focus-overlay-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.yt-focus-overlay-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 10px 0;
+}
+
+.yt-focus-overlay-desc {
+  font-size: 15px;
+  line-height: 1.5;
+  color: #94a3b8;
+  margin: 0 0 24px 0;
+}
+
+.yt-focus-cooldown-timer-box {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.yt-focus-cooldown-time {
+  font-size: 42px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #60a5fa;
+  letter-spacing: -0.02em;
+}
+
+.yt-focus-cooldown-label {
+  font-size: 13px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 4px;
+}
+
+.yt-focus-overlay-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.yt-focus-btn-secondary {
+  padding: 10px 20px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #e2e8f0;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.yt-focus-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   7. TOAST NOTIFICATION SYSTEM
+   ========================================================================== */
+
+.yt-focus-toast-container {
+  position: fixed !important;
+  bottom: 24px !important;
+  right: 24px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  z-index: 2147483647 !important;
+  pointer-events: none !important;
+}
+
+.yt-focus-toast {
+  pointer-events: auto !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 12px 18px !important;
+  background: rgba(24, 24, 27, 0.95) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4) !important;
+  backdrop-filter: blur(12px) !important;
+  color: #f8fafc !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  animation: yt-focus-toast-slide 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition: opacity 0.2s ease, transform 0.2s ease !important;
+}
+
+.yt-focus-toast.fade-out {
+  opacity: 0 !important;
+  transform: translateY(10px) !important;
+}
+
+.yt-focus-toast-icon {
+  font-size: 16px !important;
+}
+
+@keyframes yt-focus-toast-slide {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes yt-focus-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .yt-focus-toast,
+  .yt-focus-course-banner,
+  .yt-focus-cooldown-overlay,
+  .yt-focus-schedule-overlay {
+    animation: none !important;
+    transition: none !important;
+  }
+}

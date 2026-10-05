@@ -137,8 +137,9 @@ console.log('[YTF] URL:', location.href);
     if (message.action === 'ADD_TO_QUEUE' || message.action === 'ADD_CURRENT_TO_QUEUE') {
       const videoInfo = getCurrentVideoInfo();
       if (videoInfo && storage) {
-        storage.addToLearningQueue(videoInfo).then(queue => {
-          sendResponse({ success: true, videoInfo, queue });
+        storage.addVideoToQueue(videoInfo).then(res => {
+          showToast('Added to Learning Queue', '📚');
+          sendResponse({ success: true, item: res.item, queue: res.queue });
         }).catch(err => {
           sendResponse({ success: false, error: err.message });
         });
@@ -149,11 +150,37 @@ console.log('[YTF] URL:', location.href);
       }
     }
 
+    // ADD_PLAYLIST_TO_QUEUE
+    if (message.action === 'ADD_PLAYLIST_TO_QUEUE') {
+      const playlistInfo = getCurrentPlaylistInfo();
+      if (playlistInfo && storage) {
+        storage.addPlaylistToQueue(playlistInfo).then(res => {
+          showToast(`Playlist added (${playlistInfo.videos.length} videos)`, '📑');
+          sendResponse({ success: true, item: res.item, queue: res.queue });
+        }).catch(err => {
+          sendResponse({ success: false, error: err.message });
+        });
+        return true;
+      } else {
+        sendResponse({ success: false, error: 'No active playlist found on this page' });
+        return true;
+      }
+    }
+
     // GET_CURRENT_VIDEO_INFO
     if (message.action === 'GET_CURRENT_VIDEO_INFO') {
       sendResponse({
         success: true,
-        videoInfo: getCurrentVideoInfo()
+        videoInfo: getCurrentVideoInfo(),
+        playlistInfo: getCurrentPlaylistInfo()
+      });
+      return true;
+    }
+
+    // CHECK_LIMITS
+    if (message.action === 'CHECK_LIMITS') {
+      checkLimitsAndSchedules().then(() => {
+        sendResponse({ success: true });
       });
       return true;
     }
@@ -163,6 +190,8 @@ console.log('[YTF] URL:', location.href);
       if (message.settings) {
         currentSettings = message.settings;
         applyFocusMode(currentSettings.focusModeEnabled);
+        ensureCourseBanner();
+        checkLimitsAndSchedules();
       }
       sendResponse({ success: true });
       return true;
@@ -228,9 +257,10 @@ console.log('[YTF] URL:', location.href);
 
     const title = titleEl 
       ? titleEl.textContent.trim() 
-      : (document.title ? document.title.replace(' - YouTube', '') : 'YouTube Video');
+      : (document.title ? document.title.replace(' - YouTube', '').trim() : 'YouTube Video');
     const channel = channelEl ? channelEl.textContent.trim() : 'YouTube';
-    const duration = videoEl && !isNaN(videoEl.duration) ? formatDuration(videoEl.duration) : '';
+    const durationSecs = videoEl && !isNaN(videoEl.duration) ? Math.round(videoEl.duration) : 0;
+    const duration = formatDuration(durationSecs);
     const url = window.location.href;
     let id = '';
     try {
@@ -240,7 +270,108 @@ console.log('[YTF] URL:', location.href);
       // Fallback
     }
 
-    return { id, title, channel, duration, url };
+    return {
+      id,
+      videoId: id,
+      title,
+      channel,
+      channelTitle: channel,
+      duration,
+      durationSeconds: durationSecs,
+      url,
+      sourceUrl: url,
+      thumbnail: id ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg` : ''
+    };
+  }
+
+  function getCurrentPlaylistInfo() {
+    try {
+      const urlObj = new URL(window.location.href);
+      const playlistId = urlObj.searchParams.get('list');
+      if (!playlistId || playlistId === 'WL' || playlistId === 'LL') return null;
+
+      let title = 'YouTube Playlist';
+      const plTitleEl = document.querySelector('ytd-playlist-panel-renderer .title, ytd-playlist-header-renderer h1, #header-description h3, h1.ytd-playlist-header-renderer');
+      if (plTitleEl && plTitleEl.textContent.trim()) {
+        title = plTitleEl.textContent.trim();
+      }
+
+      let channelTitle = 'YouTube';
+      const plChannelEl = document.querySelector('ytd-playlist-panel-renderer #publisher-container, ytd-playlist-header-renderer #owner-container a');
+      if (plChannelEl && plChannelEl.textContent.trim()) {
+        channelTitle = plChannelEl.textContent.trim();
+      }
+
+      const videos = [];
+      const itemElements = document.querySelectorAll('ytd-playlist-panel-video-renderer, ytd-playlist-video-renderer');
+
+      itemElements.forEach((el, idx) => {
+        const titleEl = el.querySelector('#video-title, #video-title-link, span#video-title');
+        const linkEl = el.querySelector('a#wc-endpoint, a#thumbnail, a#video-title');
+        const timeEl = el.querySelector('.ytd-thumbnail-overlay-time-status-renderer, span.badge-shape-wiz__text');
+
+        let vId = '';
+        if (linkEl && linkEl.href) {
+          try {
+            const parsed = new URL(linkEl.href, window.location.origin);
+            vId = parsed.searchParams.get('v') || '';
+          } catch(e) {}
+        }
+
+        const vTitle = titleEl ? titleEl.textContent.trim() : `Video ${idx + 1}`;
+        const vDuration = timeEl ? timeEl.textContent.trim() : '';
+
+        if (vId && !videos.some(v => v.videoId === vId)) {
+          videos.push({
+            videoId: vId,
+            title: vTitle,
+            duration: vDuration,
+            thumbnail: `https://i.ytimg.com/vi/${vId}/hqdefault.jpg`,
+            completed: false
+          });
+        }
+      });
+
+      return {
+        playlistId,
+        title,
+        channelTitle,
+        sourceUrl: `https://www.youtube.com/playlist?list=${playlistId}`,
+        videos,
+        totalCount: videos.length
+      };
+    } catch(err) {
+      console.warn('[YTF] Error extracting playlist info:', err);
+      return null;
+    }
+  }
+
+  function showToast(message, icon = '🎯', duration = 3500) {
+    try {
+      let container = document.getElementById(CSS_CLASSES.TOAST_CONTAINER);
+      if (!container) {
+        container = document.createElement('div');
+        container.id = CSS_CLASSES.TOAST_CONTAINER;
+        container.className = CSS_CLASSES.TOAST_CONTAINER;
+        document.body.appendChild(container);
+      }
+
+      const toast = document.createElement('div');
+      toast.className = CSS_CLASSES.TOAST;
+      toast.innerHTML = `
+        <span class="yt-focus-toast-icon">${icon}</span>
+        <span class="yt-focus-toast-msg">${message}</span>
+      `;
+
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.classList.add('fade-out');
+        setTimeout(() => toast.remove(), 250);
+      }, duration);
+    } catch (e) {
+      console.log('[YTF Toast]', message);
+    }
   }
 
   // =========================================================================
@@ -571,9 +702,20 @@ console.log('[YTF] URL:', location.href);
     if (isWatchPage()) {
       homeHubInjected = false;
       ensurePlayerButtonInjected();
+      initActiveSession();
+      setTimeout(() => {
+        ensureQuickAddButtons();
+        ensureCourseBanner();
+        checkLimitsAndSchedules();
+      }, 500);
     } else {
       if (isWindowFullscreen) {
         disableWindowFullscreen();
+      }
+      flushActiveSession();
+      removeCourseBanner();
+      if (window.location.pathname === '/playlist') {
+        setTimeout(ensureQuickAddButtons, 500);
       }
     }
 
@@ -605,6 +747,10 @@ console.log('[YTF] URL:', location.href);
     window.addEventListener('yt-page-data-updated', () => {
       if (isWatchPage()) {
         ensurePlayerButtonInjected();
+        ensureQuickAddButtons();
+        ensureCourseBanner();
+      } else if (window.location.pathname === '/playlist') {
+        ensureQuickAddButtons();
       }
       if (isHomePage() && currentSettings.focusModeEnabled) {
         ensureHomeFocusHub();
@@ -672,7 +818,401 @@ console.log('[YTF] URL:', location.href);
   }
 
   // =========================================================================
-  // 6. INITIALIZATION SEQUENCE
+  // 6. QUICK ADD BUTTONS & COURSE / LEARNING MODE
+  // =========================================================================
+
+  async function ensureQuickAddButtons() {
+    if (!storage) return;
+
+    if (isWatchPage()) {
+      const videoInfo = getCurrentVideoInfo();
+      if (!videoInfo || !videoInfo.videoId) return;
+
+      const actionsContainer = document.querySelector('#top-row #actions #top-level-buttons-computed, #top-row #actions-inner, #actions #top-level-buttons-computed, #actions.ytd-watch-metadata');
+      if (!actionsContainer) return;
+
+      // Video Quick Add Button
+      let videoBtn = actionsContainer.querySelector(`.${CSS_CLASSES.QUICK_ADD_BTN}`);
+      const isVideoQueued = await storage.isItemInQueue(videoInfo.videoId);
+
+      if (!videoBtn) {
+        videoBtn = document.createElement('button');
+        videoBtn.className = `${CSS_CLASSES.QUICK_ADD_BTN}${isVideoQueued ? ' queued' : ''}`;
+        videoBtn.type = 'button';
+        videoBtn.innerHTML = isVideoQueued
+          ? `<svg viewBox="0 0 24 24"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/></svg> <span>In Queue</span>`
+          : `<svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> <span>Queue</span>`;
+
+        videoBtn.addEventListener('click', async (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const currentQueued = await storage.isItemInQueue(videoInfo.videoId);
+          if (currentQueued) {
+            showToast('Already in Learning Queue', '✓');
+          } else {
+            await storage.addVideoToQueue(videoInfo);
+            videoBtn.classList.add('queued');
+            videoBtn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/></svg> <span>In Queue</span>`;
+            showToast('Added to Learning Queue', '📚');
+          }
+        });
+
+        actionsContainer.appendChild(videoBtn);
+      } else {
+        videoBtn.classList.toggle('queued', isVideoQueued);
+        videoBtn.innerHTML = isVideoQueued
+          ? `<svg viewBox="0 0 24 24"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/></svg> <span>In Queue</span>`
+          : `<svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> <span>Queue</span>`;
+      }
+
+      // Playlist Quick Add Button (if watching inside a playlist)
+      const playlistInfo = getCurrentPlaylistInfo();
+      let plBtn = actionsContainer.querySelector(`.${CSS_CLASSES.QUICK_ADD_PLAYLIST_BTN}`);
+      if (playlistInfo && playlistInfo.playlistId) {
+        const isPlQueued = await storage.isItemInQueue(playlistInfo.playlistId);
+        if (!plBtn) {
+          plBtn = document.createElement('button');
+          plBtn.className = `${CSS_CLASSES.QUICK_ADD_PLAYLIST_BTN}${isPlQueued ? ' queued' : ''}`;
+          plBtn.type = 'button';
+          plBtn.innerHTML = isPlQueued
+            ? `<svg viewBox="0 0 24 24"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/></svg> <span>Playlist Queued</span>`
+            : `<svg viewBox="0 0 24 24"><path d="M4 10h12v2H4zm0-4h12v2H4zm0 8h8v2H4zm10 0v6l5-3z"/></svg> <span>+ Playlist</span>`;
+
+          plBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const freshPl = getCurrentPlaylistInfo() || playlistInfo;
+            await storage.addPlaylistToQueue(freshPl);
+            plBtn.classList.add('queued');
+            plBtn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/></svg> <span>Playlist Queued</span>`;
+            showToast(`Playlist added (${freshPl.videos.length} videos)`, '📑');
+          });
+
+          actionsContainer.appendChild(plBtn);
+        } else {
+          plBtn.classList.toggle('queued', isPlQueued);
+        }
+      } else if (plBtn) {
+        plBtn.remove();
+      }
+    } else if (window.location.pathname === '/playlist') {
+      const playlistInfo = getCurrentPlaylistInfo();
+      if (!playlistInfo || !playlistInfo.playlistId) return;
+
+      const headerContainer = document.querySelector('ytd-playlist-header-renderer #action-buttons, ytd-playlist-header-renderer .immersive-header-content, ytd-playlist-header-renderer');
+      if (!headerContainer || headerContainer.querySelector(`.${CSS_CLASSES.QUICK_ADD_PLAYLIST_BTN}`)) return;
+
+      const isPlQueued = await storage.isItemInQueue(playlistInfo.playlistId);
+      const btn = document.createElement('button');
+      btn.className = `${CSS_CLASSES.QUICK_ADD_PLAYLIST_BTN}${isPlQueued ? ' queued' : ''}`;
+      btn.type = 'button';
+      btn.innerHTML = isPlQueued
+        ? `<svg viewBox="0 0 24 24"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/></svg> <span>Playlist Queued</span>`
+        : `<svg viewBox="0 0 24 24"><path d="M4 10h12v2H4zm0-4h12v2H4zm0 8h8v2H4zm10 0v6l5-3z"/></svg> <span>Add Playlist to Queue</span>`;
+
+      btn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const freshPl = getCurrentPlaylistInfo() || playlistInfo;
+        await storage.addPlaylistToQueue(freshPl);
+        btn.classList.add('queued');
+        btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/></svg> <span>Playlist Queued</span>`;
+        showToast(`Playlist added (${freshPl.videos.length} videos)`, '📑');
+      });
+
+      headerContainer.appendChild(btn);
+    }
+  }
+
+  async function ensureCourseBanner() {
+    if (!storage || !isWatchPage() || !currentSettings.courseModeEnabled) {
+      removeCourseBanner();
+      return;
+    }
+
+    const videoInfo = getCurrentVideoInfo();
+    if (!videoInfo || !videoInfo.videoId) return;
+
+    const queue = await storage.getLearningQueue();
+    const matchedPlaylist = queue.find(q => q.type === 'playlist' && Array.isArray(q.videos) && q.videos.some(v => v.videoId === videoInfo.videoId));
+
+    if (!matchedPlaylist) {
+      removeCourseBanner();
+      return;
+    }
+
+    const videoIndex = matchedPlaylist.videos.findIndex(v => v.videoId === videoInfo.videoId);
+    const lessonNum = videoIndex >= 0 ? videoIndex + 1 : 1;
+    const totalLessons = matchedPlaylist.videos.length;
+    const completedCount = matchedPlaylist.videos.filter(v => v.completed).length;
+    const pct = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
+
+    let nextVideo = null;
+    if (videoIndex >= 0 && videoIndex + 1 < totalLessons) {
+      nextVideo = matchedPlaylist.videos[videoIndex + 1];
+    } else {
+      nextVideo = matchedPlaylist.videos.find(v => !v.completed && v.videoId !== videoInfo.videoId);
+    }
+
+    const targetContainer = document.querySelector('#primary-inner #below, #primary #below, ytd-watch-metadata');
+    if (!targetContainer) return;
+
+    let banner = document.querySelector(`.${CSS_CLASSES.COURSE_BANNER}`);
+    if (!banner) {
+      banner = document.createElement('div');
+      banner.className = CSS_CLASSES.COURSE_BANNER;
+      targetContainer.parentNode.insertBefore(banner, targetContainer);
+    }
+
+    banner.innerHTML = `
+      <div class="yt-focus-course-info">
+        <div class="yt-focus-course-title-row">
+          <span class="yt-focus-course-badge">Course Mode</span>
+          <span class="yt-focus-course-title">${matchedPlaylist.title}</span>
+        </div>
+        <div class="yt-focus-course-meta">
+          <span>Lesson ${lessonNum} of ${totalLessons}</span>
+          <div class="yt-focus-course-progress-bar">
+            <div class="yt-focus-course-progress-fill" style="width: ${pct}%;"></div>
+          </div>
+          <span>${pct}% completed</span>
+        </div>
+      </div>
+      ${nextVideo ? `
+        <a href="https://www.youtube.com/watch?v=${nextVideo.videoId}&list=${matchedPlaylist.playlistId}" class="yt-focus-course-action-btn">
+          <span>Next Lesson</span>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
+        </a>
+      ` : ''}
+    `;
+  }
+
+  function removeCourseBanner() {
+    const existing = document.querySelector(`.${CSS_CLASSES.COURSE_BANNER}`);
+    if (existing) existing.remove();
+  }
+
+  // =========================================================================
+  // 7. WATCH TIME TRACKING, AUTO-COMPLETION & LIMITS ENFORCEMENT
+  // =========================================================================
+
+  let activeSession = null;
+  let trackerInterval = null;
+  let warnedToday75 = false;
+  let warnedToday90 = false;
+  let warnedToday100 = false;
+  let cooldownTimerInterval = null;
+
+  function initActiveSession() {
+    if (!isWatchPage()) {
+      flushActiveSession();
+      return;
+    }
+
+    const videoInfo = getCurrentVideoInfo();
+    if (!videoInfo || !videoInfo.videoId) return;
+
+    if (activeSession && activeSession.videoId === videoInfo.videoId) return;
+
+    flushActiveSession();
+
+    activeSession = {
+      videoId: videoInfo.videoId,
+      videoTitle: videoInfo.title,
+      channelTitle: videoInfo.channelTitle,
+      playlistId: new URL(window.location.href).searchParams.get('list') || null,
+      startTime: Date.now(),
+      durationSeconds: 0,
+      autoCompleted: false
+    };
+  }
+
+  function flushActiveSession() {
+    if (activeSession && activeSession.durationSeconds >= 5 && storage) {
+      storage.recordWatchSession(activeSession);
+    }
+    activeSession = null;
+  }
+
+  function setupWatchTimeTracker() {
+    if (trackerInterval) clearInterval(trackerInterval);
+
+    trackerInterval = setInterval(async () => {
+      const videoEl = document.querySelector(SELECTORS.videoElement);
+      if (!videoEl || videoEl.paused || videoEl.ended || document.visibilityState !== 'visible') {
+        return;
+      }
+
+      if (!activeSession) {
+        initActiveSession();
+      }
+
+      if (activeSession) {
+        activeSession.durationSeconds += 10;
+
+        if (storage) {
+          const isQueue = await storage.isItemInQueue(activeSession.videoId);
+          await storage.recordWatchTime(10, isShortsPage(), isQueue, currentSettings.focusModeEnabled);
+
+          // Auto-mark completed at 90% threshold
+          if (videoEl.duration > 30 && (videoEl.currentTime / videoEl.duration >= (currentSettings.autoCompleteThreshold || 0.9)) && !activeSession.autoCompleted) {
+            activeSession.autoCompleted = true;
+            const res = await storage.autoCompleteVideo(activeSession.videoId);
+            if (res && res.success) {
+              showToast(`Marked as complete (90% watched)`, '🎉');
+              ensureCourseBanner();
+            }
+          }
+        }
+      }
+
+      await checkLimitsAndSchedules();
+    }, 10000);
+
+    window.addEventListener('beforeunload', flushActiveSession);
+  }
+
+  async function checkLimitsAndSchedules() {
+    if (!storage) return;
+
+    // 1. Check Cooldown
+    const cooldown = await storage.getCooldownState();
+    if (cooldown && cooldown.active) {
+      renderCooldownOverlay(cooldown.remainingSeconds);
+      return;
+    } else {
+      removeCooldownOverlay();
+    }
+
+    // 2. Check Schedule
+    if (currentSettings.scheduleEnabled) {
+      const activeSchedule = await storage.isScheduleActiveNow();
+      if (activeSchedule) {
+        if (activeSchedule.mode === 'block') {
+          renderScheduleOverlay(activeSchedule);
+          return;
+        } else if (activeSchedule.mode === 'focus' && !currentSettings.focusModeEnabled) {
+          applyFocusMode(true);
+        }
+      } else {
+        removeScheduleOverlay();
+      }
+    } else {
+      removeScheduleOverlay();
+    }
+
+    // 3. Check Daily Limits
+    const { today } = await storage.getDailyStats();
+    const todayMins = Math.round((today?.watchTimeSeconds || 0) / 60);
+    const limitMins = currentSettings.dailyLimitMinutes || 60;
+
+    if (todayMins >= limitMins) {
+      if (currentSettings.limitMode === 'hard') {
+        const cd = await storage.setCooldownState(true, currentSettings.cooldownMinutes || 10, 'limit');
+        if (cd) renderCooldownOverlay(cd.remainingSeconds);
+      } else if (!warnedToday100) {
+        warnedToday100 = true;
+        showToast(`Daily YouTube limit reached (${limitMins}m). Consider taking a break!`, '⏳', 6000);
+      }
+    } else if (todayMins >= limitMins * 0.9 && !warnedToday90) {
+      warnedToday90 = true;
+      const rem = Math.max(1, limitMins - todayMins);
+      showToast(`${rem} minutes remaining before your daily limit.`, '⚠️', 5000);
+    } else if (todayMins >= limitMins * 0.75 && !warnedToday75) {
+      warnedToday75 = true;
+      showToast(`You have used 75% of your daily YouTube limit (${todayMins}/${limitMins}m).`, '💡', 4000);
+    }
+  }
+
+  function renderCooldownOverlay(remainingSeconds) {
+    const videoEl = document.querySelector(SELECTORS.videoElement);
+    if (videoEl && !videoEl.paused) videoEl.pause();
+
+    let overlay = document.getElementById(CSS_CLASSES.COOLDOWN_OVERLAY);
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = CSS_CLASSES.COOLDOWN_OVERLAY;
+      overlay.className = CSS_CLASSES.COOLDOWN_OVERLAY;
+      overlay.innerHTML = `
+        <div class="yt-focus-overlay-card">
+          <div class="yt-focus-overlay-icon">🧘</div>
+          <h2 class="yt-focus-overlay-title">Time for a Mindful Break</h2>
+          <p class="yt-focus-overlay-desc">You've reached your configured daily limit. Take a short pause before resuming.</p>
+          <div class="yt-focus-cooldown-timer-box">
+            <div class="yt-focus-cooldown-time" id="yt-focus-cd-timer">--:--</div>
+            <div class="yt-focus-cooldown-label">Cooldown Remaining</div>
+          </div>
+          <div class="yt-focus-overlay-actions">
+            <button type="button" class="yt-focus-btn-secondary" id="yt-focus-btn-dismiss-cd">Dismiss (Resume Watching)</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+
+      const dismissBtn = overlay.querySelector('#yt-focus-btn-dismiss-cd');
+      dismissBtn.addEventListener('click', async () => {
+        await storage.setCooldownState(false);
+        removeCooldownOverlay();
+      });
+    }
+
+    let secsLeft = remainingSeconds;
+    const timerEl = overlay.querySelector('#yt-focus-cd-timer');
+
+    function updateTimer() {
+      if (secsLeft <= 0) {
+        clearInterval(cooldownTimerInterval);
+        removeCooldownOverlay();
+        return;
+      }
+      const m = Math.floor(secsLeft / 60);
+      const s = secsLeft % 60;
+      if (timerEl) {
+        timerEl.textContent = `${m}:${s < 10 ? '0' : ''}${s}`;
+      }
+      secsLeft--;
+    }
+
+    updateTimer();
+    if (cooldownTimerInterval) clearInterval(cooldownTimerInterval);
+    cooldownTimerInterval = setInterval(updateTimer, 1000);
+  }
+
+  function removeCooldownOverlay() {
+    if (cooldownTimerInterval) clearInterval(cooldownTimerInterval);
+    const overlay = document.getElementById(CSS_CLASSES.COOLDOWN_OVERLAY);
+    if (overlay) overlay.remove();
+  }
+
+  function renderScheduleOverlay(schedule) {
+    const videoEl = document.querySelector(SELECTORS.videoElement);
+    if (videoEl && !videoEl.paused) videoEl.pause();
+
+    let overlay = document.getElementById(CSS_CLASSES.SCHEDULE_OVERLAY);
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = CSS_CLASSES.SCHEDULE_OVERLAY;
+      overlay.className = CSS_CLASSES.SCHEDULE_OVERLAY;
+      overlay.innerHTML = `
+        <div class="yt-focus-overlay-card">
+          <div class="yt-focus-overlay-icon">🔒</div>
+          <h2 class="yt-focus-overlay-title">Scheduled Focus Period</h2>
+          <p class="yt-focus-overlay-desc">YouTube viewing is paused during <strong>${schedule.name || 'Scheduled Hours'}</strong> (${schedule.startTime} – ${schedule.endTime}).</p>
+          <div class="yt-focus-overlay-actions">
+            <a href="${chrome.runtime.getURL('src/dashboard/dashboard.html')}" target="_blank" class="yt-focus-btn-secondary">Manage Schedules</a>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+    }
+  }
+
+  function removeScheduleOverlay() {
+    const overlay = document.getElementById(CSS_CLASSES.SCHEDULE_OVERLAY);
+    if (overlay) overlay.remove();
+  }
+
+  // =========================================================================
+  // 8. INITIALIZATION SEQUENCE
   // =========================================================================
 
   async function init() {
@@ -690,12 +1230,16 @@ console.log('[YTF] URL:', location.href);
 
       setupNavigationListeners();
       setupKeyboardShortcuts();
+      setupWatchTimeTracker();
+      checkLimitsAndSchedules();
 
       if (storage && storage.onSettingsChanged) {
         storage.onSettingsChanged((newSettings) => {
           currentSettings = newSettings;
           applyFocusMode(currentSettings.focusModeEnabled);
           updateStatusPill();
+          ensureCourseBanner();
+          checkLimitsAndSchedules();
         });
       }
     } catch (err) {

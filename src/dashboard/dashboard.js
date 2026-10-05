@@ -1,5 +1,7 @@
 /**
  * YouTube Focus - Dashboard Application Logic
+ * Coordinates Navigation, Learning Queue (Videos & Playlists), Analytics Charts,
+ * Focus Mode Controls, Limits, Cooldown, Schedules, and Local Data Management.
  */
 
 (function () {
@@ -9,18 +11,73 @@
   const { DEFAULT_SETTINGS, ACTIONS } = window.YTF_CONSTANTS;
 
   let currentSettings = Object.assign({}, DEFAULT_SETTINGS);
+  let currentFilter = 'all';
+  let currentAnalyticsRange = '7d';
 
-  // Tab Navigation
+  // Navigation
   const navItems = document.querySelectorAll('.nav-item');
   const sections = document.querySelectorAll('.content-section');
   const navQueueCount = document.getElementById('nav-queue-count');
 
-  // Overview elements
+  // Overview Elements
   const ovWatchTime = document.getElementById('ov-watch-time');
   const ovWatchSub = document.getElementById('ov-watch-sub');
+  const ovWatchBar = document.getElementById('ov-watch-bar');
+  const ovFocusTime = document.getElementById('ov-focus-time');
+  const ovFocusPct = document.getElementById('ov-focus-pct');
   const ovQueueCount = document.getElementById('ov-queue-count');
   const ovQueueSub = document.getElementById('ov-queue-sub');
   const ovFocusStatus = document.getElementById('ov-focus-status');
+  const spotlightCard = document.getElementById('spotlight-card');
+  const spotlightTitle = document.getElementById('spotlight-title');
+  const spotlightMeta = document.getElementById('spotlight-meta');
+  const spotlightTypeBadge = document.getElementById('spotlight-type-badge');
+  const spotlightActionBtn = document.getElementById('spotlight-action-btn');
+  const heroBtnContinue = document.getElementById('hero-btn-continue');
+  const recentActivityList = document.getElementById('recent-activity-list');
+
+  // Learning Queue Elements
+  const queueIntelVideos = document.getElementById('queue-intel-videos');
+  const queueIntelRemaining = document.getElementById('queue-intel-remaining');
+  const queueIntelPlaylists = document.getElementById('queue-intel-playlists');
+  const queueIntelPlCompleted = document.getElementById('queue-intel-pl-completed');
+  const queueIntelTime = document.getElementById('queue-intel-time');
+  const queueIntelTimeRem = document.getElementById('queue-intel-time-rem');
+  const queueIntelPct = document.getElementById('queue-intel-pct');
+  const queueIntelBar = document.getElementById('queue-intel-bar');
+  const learningQueueList = document.getElementById('learning-queue-list');
+  const filterTabs = document.querySelectorAll('.filter-tab[data-filter]');
+
+  // Modals: Add Video & Add Playlist
+  const btnShowAddVideo = document.getElementById('btn-show-add-video');
+  const modalAddVideo = document.getElementById('modal-add-video');
+  const modalAddVideoClose = document.getElementById('modal-add-video-close');
+  const btnCancelAddVideo = document.getElementById('btn-cancel-add-video');
+  const formAddVideo = document.getElementById('form-add-video');
+  const inputVideoUrl = document.getElementById('input-video-url');
+  const inputVideoTitle = document.getElementById('input-video-title');
+  const inputVideoChannel = document.getElementById('input-video-channel');
+
+  const btnShowAddPlaylist = document.getElementById('btn-show-add-playlist');
+  const modalAddPlaylist = document.getElementById('modal-add-playlist');
+  const modalAddPlaylistClose = document.getElementById('modal-add-playlist-close');
+  const btnCancelAddPlaylist = document.getElementById('btn-cancel-add-playlist');
+  const formAddPlaylist = document.getElementById('form-add-playlist');
+  const inputPlaylistUrl = document.getElementById('input-playlist-url');
+  const inputPlaylistTitle = document.getElementById('input-playlist-title');
+  const inputPlaylistChannel = document.getElementById('input-playlist-channel');
+
+  // Analytics Elements
+  const anTotalTime = document.getElementById('an-total-time');
+  const anPeriodLabel = document.getElementById('an-period-label');
+  const anFocusTime = document.getElementById('an-focus-time');
+  const anFocusPct = document.getElementById('an-focus-pct');
+  const anLearningTime = document.getElementById('an-learning-time');
+  const anLearningPct = document.getElementById('an-learning-pct');
+  const anAvgSession = document.getElementById('an-avg-session');
+  const anLongestSession = document.getElementById('an-longest-session');
+  const analyticsBarChart = document.getElementById('analytics-bar-chart');
+  const rangeTabs = document.querySelectorAll('.filter-tab[data-range]');
 
   // Focus Toggles
   const dashFocusMode = document.getElementById('dash-focus-mode');
@@ -30,23 +87,34 @@
   const dashHideEndscreens = document.getElementById('dash-hide-endscreens');
   const dashHideComments = document.getElementById('dash-hide-comments');
 
-  // Limits
+  // Time & Cooldown
   const dashDailyLimit = document.getElementById('dash-daily-limit');
+  const limitPresetBtns = document.querySelectorAll('.preset-btn[data-limit]');
+  const btnModeSoft = document.getElementById('btn-mode-soft');
+  const btnModeHard = document.getElementById('btn-mode-hard');
   const dashWarningLimit = document.getElementById('dash-warning-limit');
-  const dashCooldownWatch = document.getElementById('dash-cooldown-watch');
+  const dashCooldownMins = document.getElementById('dash-cooldown-mins');
+  const btnTestCooldown = document.getElementById('btn-test-cooldown');
 
-  // Queue
-  const addVideoForm = document.getElementById('add-video-form');
-  const queueInputUrl = document.getElementById('queue-input-url');
-  const queueInputTitle = document.getElementById('queue-input-title');
-  const queueInputChannel = document.getElementById('queue-input-channel');
-  const fullQueueList = document.getElementById('full-queue-list');
-  const queueTotalTime = document.getElementById('queue-total-time');
+  // Schedules
+  const dashScheduleMaster = document.getElementById('dash-schedule-master');
+  const schedulesList = document.getElementById('schedules-list');
+  const btnShowAddSchedule = document.getElementById('btn-show-add-schedule');
+  const modalAddSchedule = document.getElementById('modal-add-schedule');
+  const modalAddScheduleClose = document.getElementById('modal-add-schedule-close');
+  const btnCancelAddSch = document.getElementById('btn-cancel-add-sch');
+  const formAddSchedule = document.getElementById('form-add-schedule');
+  const inputSchName = document.getElementById('input-sch-name');
+  const inputSchStart = document.getElementById('input-sch-start');
+  const inputSchEnd = document.getElementById('input-sch-end');
+  const selectSchMode = document.getElementById('select-sch-mode');
 
-  // Data
+  // Preferences & Data
+  const dashCourseMode = document.getElementById('dash-course-mode');
   const btnExportData = document.getElementById('btn-export-data');
-  const btnResetDefaults = document.getElementById('btn-reset-defaults');
-  const btnClearAll = document.getElementById('btn-clear-all');
+  const btnClearHistory = document.getElementById('btn-clear-history');
+  const btnClearQueue = document.getElementById('btn-clear-queue');
+  const btnResetAll = document.getElementById('btn-reset-all');
 
   function formatMins(totalMins) {
     if (!totalMins) return '0m';
@@ -55,10 +123,31 @@
     return h > 0 ? `${h}h ${m}m` : `${m}m`;
   }
 
+  function formatSecs(totalSecs) {
+    const mins = Math.round((totalSecs || 0) / 60);
+    return formatMins(mins);
+  }
+
+  function showDashToast(message, icon = '✓') {
+    const existing = document.querySelector('.dash-toast');
+    if (existing) existing.remove();
+
+    const toast = document.createElement('div');
+    toast.className = 'dash-toast';
+    toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+      toast.classList.add('fade-out');
+      setTimeout(() => toast.remove(), 200);
+    }, 3000);
+  }
+
   async function init() {
     setupNavigation();
-    await loadData();
+    setupModals();
     setupEventListeners();
+    await loadAllData();
   }
 
   function setupNavigation() {
@@ -72,31 +161,112 @@
         const activeSection = document.getElementById(`section-${target}`);
         if (activeSection) {
           activeSection.classList.add('active');
+          if (target === 'analytics') {
+            loadAnalytics(currentAnalyticsRange);
+          }
         }
+      });
+    });
+
+    filterTabs.forEach(tab => {
+      tab.addEventListener('click', async () => {
+        filterTabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        currentFilter = tab.getAttribute('data-filter');
+        const queue = await storage.getLearningQueue();
+        renderLearningQueue(queue);
+      });
+    });
+
+    rangeTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        rangeTabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        currentAnalyticsRange = tab.getAttribute('data-range');
+        loadAnalytics(currentAnalyticsRange);
       });
     });
   }
 
-  async function loadData() {
+  function setupModals() {
+    // Add Video Modal
+    btnShowAddVideo.addEventListener('click', () => modalAddVideo.classList.remove('hidden'));
+    modalAddVideoClose.addEventListener('click', () => modalAddVideo.classList.add('hidden'));
+    btnCancelAddVideo.addEventListener('click', () => modalAddVideo.classList.add('hidden'));
+
+    // Add Playlist Modal
+    btnShowAddPlaylist.addEventListener('click', () => modalAddPlaylist.classList.remove('hidden'));
+    modalAddPlaylistClose.addEventListener('click', () => modalAddPlaylist.classList.add('hidden'));
+    btnCancelAddPlaylist.addEventListener('click', () => modalAddPlaylist.classList.add('hidden'));
+
+    // Add Schedule Modal
+    btnShowAddSchedule.addEventListener('click', () => modalAddSchedule.classList.remove('hidden'));
+    modalAddScheduleClose.addEventListener('click', () => modalAddSchedule.classList.add('hidden'));
+    btnCancelAddSch.addEventListener('click', () => modalAddSchedule.classList.add('hidden'));
+
+    // Close on backdrop click
+    [modalAddVideo, modalAddPlaylist, modalAddSchedule].forEach(modal => {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.classList.add('hidden');
+      });
+    });
+  }
+
+  async function loadAllData() {
     currentSettings = await storage.getSettings();
     const { today } = await storage.getDailyStats();
     const queue = await storage.getLearningQueue();
+    const intel = await storage.getQueueIntelligence();
 
-    // Overview KPIs
+    // 1. Overview Tab
     const todayMins = Math.round((today?.watchTimeSeconds || 0) / 60);
-    ovWatchTime.textContent = formatMins(todayMins);
-    ovWatchSub.textContent = `Goal: ${currentSettings.dailyLimitMinutes || 90}m`;
+    const limitMins = currentSettings.dailyLimitMinutes || 60;
+    const focusMins = Math.round((today?.focusTimeSeconds || 0) / 60);
+    const focusPctVal = todayMins > 0 ? Math.min(100, Math.round((focusMins / todayMins) * 100)) : 0;
 
-    const pendingCount = queue.filter(q => !q.completed).length;
-    const completedCount = queue.filter(q => q.completed).length;
-    ovQueueCount.textContent = pendingCount;
-    ovQueueSub.textContent = `${completedCount} completed`;
-    navQueueCount.textContent = pendingCount;
+    ovWatchTime.textContent = formatMins(todayMins);
+    ovWatchSub.textContent = `Limit: ${limitMins}m`;
+    ovWatchBar.style.width = `${Math.min(100, Math.round((todayMins / limitMins) * 100))}%`;
+
+    ovFocusTime.textContent = formatMins(focusMins);
+    ovFocusPct.textContent = `${focusPctVal}% of today's time`;
+
+    ovQueueCount.textContent = intel.totalVideos;
+    ovQueueSub.textContent = `${intel.completedVideos} completed`;
+    navQueueCount.textContent = intel.remainingVideos;
 
     ovFocusStatus.textContent = currentSettings.focusModeEnabled ? 'Active' : 'Paused';
-    ovFocusStatus.className = currentSettings.focusModeEnabled ? 'kpi-val text-accent' : 'kpi-val';
+    ovFocusStatus.className = currentSettings.focusModeEnabled ? 'kpi-val text-emerald' : 'kpi-val text-muted';
 
-    // Focus Toggles
+    // Spotlight & Hero Continue
+    if (intel.nextItem) {
+      spotlightTitle.textContent = intel.nextItem.title;
+      spotlightMeta.textContent = `${intel.nextItem.channel} • ${intel.nextItem.progress} completed`;
+      spotlightTypeBadge.textContent = intel.nextItem.type === 'playlist' ? 'Course in Progress' : 'Next Video';
+      spotlightActionBtn.href = intel.nextItem.url;
+      heroBtnContinue.style.display = 'inline-flex';
+      heroBtnContinue.onclick = () => window.open(intel.nextItem.url, '_blank');
+    } else {
+      spotlightTitle.textContent = 'Learning Queue is empty';
+      spotlightMeta.textContent = 'Add videos or entire playlists from YouTube or the Learning Queue tab.';
+      spotlightTypeBadge.textContent = 'Queue Empty';
+      spotlightActionBtn.href = 'https://www.youtube.com';
+      spotlightActionBtn.querySelector('span').textContent = 'Browse YouTube';
+    }
+
+    // 2. Learning Queue Tab Intelligence
+    queueIntelVideos.textContent = intel.totalVideos;
+    queueIntelRemaining.textContent = `${intel.remainingVideos} remaining`;
+    queueIntelPlaylists.textContent = intel.playlistsCount;
+    queueIntelPlCompleted.textContent = `${intel.completedPlaylistsCount} completed`;
+    queueIntelTime.textContent = formatSecs(intel.totalDurationSecs);
+    queueIntelTimeRem.textContent = `${formatSecs(intel.remainingDurationSecs)} remaining`;
+    queueIntelPct.textContent = `${intel.completionPct}%`;
+    queueIntelBar.style.width = `${intel.completionPct}%`;
+
+    renderLearningQueue(queue);
+
+    // 3. Focus Settings
     dashFocusMode.checked = !!currentSettings.focusModeEnabled;
     dashHideHome.checked = !!currentSettings.hideHomeFeed;
     dashHideShorts.checked = !!currentSettings.hideShorts;
@@ -104,141 +274,532 @@
     dashHideEndscreens.checked = !!currentSettings.hideEndScreens;
     dashHideComments.checked = !!currentSettings.hideComments;
 
-    // Limits
-    dashDailyLimit.value = currentSettings.dailyLimitMinutes || 90;
-    dashWarningLimit.value = currentSettings.dailyWarningMinutes || 75;
-    dashCooldownWatch.value = currentSettings.cooldownWatchMinutes || 45;
+    // 4. Time & Limits
+    dashDailyLimit.value = currentSettings.dailyLimitMinutes || 60;
+    dashWarningLimit.value = currentSettings.dailyWarningMinutes || 45;
+    dashCooldownMins.value = currentSettings.cooldownMinutes || 10;
 
-    renderQueueList(queue);
+    limitPresetBtns.forEach(btn => {
+      const val = parseInt(btn.getAttribute('data-limit'), 10);
+      btn.classList.toggle('active', val === currentSettings.dailyLimitMinutes);
+    });
+
+    const isHard = currentSettings.limitMode === 'hard';
+    btnModeSoft.classList.toggle('active', !isHard);
+    btnModeHard.classList.toggle('active', isHard);
+
+    // 5. Schedules
+    dashScheduleMaster.checked = !!currentSettings.scheduleEnabled;
+    await loadSchedules();
+
+    // 6. Preferences
+    dashCourseMode.checked = currentSettings.courseModeEnabled !== false;
+
+    // 7. Recent Activity & Analytics
+    await loadRecentActivity();
   }
 
-  function renderQueueList(queue) {
-    fullQueueList.innerHTML = '';
-    if (!queue || queue.length === 0) {
-      fullQueueList.innerHTML = `
-        <div style="padding: 30px; text-align: center; color: var(--text-muted);">
-          No videos in your queue. Add one above or from YouTube.
+  function renderLearningQueue(queue) {
+    learningQueueList.innerHTML = '';
+
+    let filtered = queue;
+    if (currentFilter === 'video') {
+      filtered = queue.filter(q => q.type !== 'playlist');
+    } else if (currentFilter === 'playlist') {
+      filtered = queue.filter(q => q.type === 'playlist');
+    } else if (currentFilter === 'inprogress') {
+      filtered = queue.filter(q => {
+        if (q.type === 'playlist') return q.completedCount < q.totalCount;
+        return !q.completed;
+      });
+    } else if (currentFilter === 'completed') {
+      filtered = queue.filter(q => {
+        if (q.type === 'playlist') return q.completedCount === q.totalCount && q.totalCount > 0;
+        return q.completed;
+      });
+    }
+
+    if (filtered.length === 0) {
+      learningQueueList.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">📚</div>
+          <h3>Your learning queue is empty</h3>
+          <p>Add individual videos or entire playlists from YouTube to track your intentional learning progress.</p>
+          <div style="display: flex; gap: 12px; justify-content: center;">
+            <button type="button" class="btn btn-secondary" id="empty-add-vid">Add Video</button>
+            <button type="button" class="btn btn-primary" id="empty-add-pl">Add Playlist</button>
+          </div>
         </div>
       `;
-      queueTotalTime.textContent = 'Total: 0m';
+      document.getElementById('empty-add-vid')?.addEventListener('click', () => modalAddVideo.classList.remove('hidden'));
+      document.getElementById('empty-add-pl')?.addEventListener('click', () => modalAddPlaylist.classList.remove('hidden'));
       return;
     }
 
-    queueTotalTime.textContent = `${queue.length} items (${queue.filter(q => !q.completed).length} pending)`;
+    filtered.forEach(item => {
+      if (item.type === 'playlist') {
+        renderPlaylistCard(item);
+      } else {
+        renderVideoCard(item);
+      }
+    });
+  }
 
-    queue.forEach(item => {
+  function renderVideoCard(item) {
+    const card = document.createElement('div');
+    card.className = 'queue-card';
+
+    const thumb = item.thumbnail || (item.videoId ? `https://i.ytimg.com/vi/${item.videoId}/hqdefault.jpg` : '');
+
+    card.innerHTML = `
+      <div class="queue-card-main">
+        <input type="checkbox" ${item.completed ? 'checked' : ''} class="item-complete-check" title="Toggle completed">
+        ${thumb ? `<img src="${thumb}" class="queue-card-thumb" alt="Thumbnail">` : ''}
+        <div class="queue-card-info">
+          <span class="queue-card-badge">Video</span>
+          <a href="${item.sourceUrl || item.url}" target="_blank" class="queue-card-title ${item.completed ? 'completed' : ''}">${escapeHtml(item.title)}</a>
+          <div class="queue-card-meta">
+            <span>${escapeHtml(item.channelTitle || item.channel || 'YouTube')}</span>
+            ${item.duration ? `<span>• ${item.duration}</span>` : ''}
+            <span>• Added ${new Date(item.addedAt).toLocaleDateString()}</span>
+          </div>
+        </div>
+        <div class="queue-card-actions">
+          <a href="${item.sourceUrl || item.url}" target="_blank" class="btn btn-secondary btn-sm">Watch</a>
+          <button type="button" class="btn btn-danger btn-sm btn-delete-item">Remove</button>
+        </div>
+      </div>
+    `;
+
+    card.querySelector('.item-complete-check').addEventListener('change', async () => {
+      await storage.toggleQueueItem(item.id);
+      await loadAllData();
+      showDashToast(item.completed ? 'Marked as incomplete' : 'Marked as complete', '✓');
+    });
+
+    card.querySelector('.btn-delete-item').addEventListener('click', async () => {
+      await storage.removeFromLearningQueue(item.id);
+      await loadAllData();
+      showDashToast('Removed from Learning Queue', '🗑️');
+    });
+
+    learningQueueList.appendChild(card);
+  }
+
+  function renderPlaylistCard(item) {
+    const card = document.createElement('div');
+    card.className = 'queue-card';
+
+    const total = item.totalCount || item.videos.length || 0;
+    const completed = item.completedCount || 0;
+    const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+    const thumb = item.thumbnail || (item.videos[0] ? item.videos[0].thumbnail : '');
+
+    card.innerHTML = `
+      <div class="queue-card-main">
+        <input type="checkbox" ${completed === total && total > 0 ? 'checked' : ''} class="item-complete-check" title="Toggle all completed">
+        ${thumb ? `<img src="${thumb}" class="queue-card-thumb" alt="Thumbnail">` : ''}
+        <div class="queue-card-info">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="queue-card-badge playlist">Playlist</span>
+            <span class="badge ${completed === total ? 'badge-emerald' : 'badge-blue'}">${completed} / ${total} completed</span>
+          </div>
+          <a href="${item.sourceUrl}" target="_blank" class="queue-card-title ${completed === total ? 'completed' : ''}">${escapeHtml(item.title)}</a>
+          <div class="queue-card-meta">
+            <span>${escapeHtml(item.channelTitle || 'YouTube')}</span>
+            <span>• ${total} lessons</span>
+            <span>• ${pct}% complete</span>
+          </div>
+          <div class="progress-bar-container">
+            <div class="progress-bar-fill" style="width: ${pct}%;"></div>
+          </div>
+        </div>
+        <div class="queue-card-actions">
+          <button type="button" class="btn btn-secondary btn-sm btn-expand-pl">
+            <span>Lessons</span>
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
+          </button>
+          <a href="${item.sourceUrl}" target="_blank" class="btn btn-primary btn-sm">Continue</a>
+          <button type="button" class="btn btn-danger btn-sm btn-delete-item">Remove</button>
+        </div>
+      </div>
+      <div class="playlist-drawer" style="display: none;">
+        <div class="playlist-drawer-header">Course Curriculum (${total} lessons)</div>
+        <div class="lessons-container">
+          <!-- Lessons injected dynamically -->
+        </div>
+      </div>
+    `;
+
+    // Toggle playlist all complete
+    card.querySelector('.item-complete-check').addEventListener('change', async () => {
+      await storage.toggleQueueItem(item.id);
+      await loadAllData();
+    });
+
+    // Remove entire playlist
+    card.querySelector('.btn-delete-item').addEventListener('click', async () => {
+      await storage.removeFromLearningQueue(item.id);
+      await loadAllData();
+      showDashToast('Playlist removed from queue', '🗑️');
+    });
+
+    // Expand / collapse drawer
+    const drawer = card.querySelector('.playlist-drawer');
+    const lessonsContainer = card.querySelector('.lessons-container');
+    const expandBtn = card.querySelector('.btn-expand-pl');
+
+    expandBtn.addEventListener('click', () => {
+      const isExpanded = drawer.style.display !== 'none';
+      drawer.style.display = isExpanded ? 'none' : 'block';
+      expandBtn.classList.toggle('active', !isExpanded);
+
+      if (!isExpanded && (!lessonsContainer.children.length)) {
+        renderPlaylistLessons(item, lessonsContainer);
+      }
+    });
+
+    learningQueueList.appendChild(card);
+  }
+
+  function renderPlaylistLessons(playlistItem, container) {
+    container.innerHTML = '';
+    (playlistItem.videos || []).forEach((vid, idx) => {
       const row = document.createElement('div');
-      row.className = 'queue-row';
+      row.className = 'lesson-row';
 
-      const check = document.createElement('input');
-      check.type = 'checkbox';
-      check.checked = !!item.completed;
-      check.addEventListener('change', async () => {
-        await storage.toggleQueueItem(item.id);
-        const updated = await storage.getLearningQueue();
-        renderQueueList(updated);
-        navQueueCount.textContent = updated.filter(q => !q.completed).length;
+      row.innerHTML = `
+        <input type="checkbox" ${vid.completed ? 'checked' : ''} class="lesson-check">
+        <span style="font-size: 11px; color: var(--text-muted); width: 24px;">#${idx + 1}</span>
+        <a href="https://www.youtube.com/watch?v=${vid.videoId}&list=${playlistItem.playlistId}" target="_blank" class="lesson-title ${vid.completed ? 'completed' : ''}">${escapeHtml(vid.title)}</a>
+        ${vid.duration ? `<span class="lesson-duration">${vid.duration}</span>` : ''}
+        <button type="button" class="btn btn-danger btn-sm" style="padding: 2px 6px; font-size: 10px;" title="Remove lesson">×</button>
+      `;
+
+      // Checkbox toggle
+      row.querySelector('.lesson-check').addEventListener('change', async () => {
+        await storage.toggleQueueItem(playlistItem.id, vid.videoId);
+        await loadAllData();
       });
 
-      const info = document.createElement('div');
-      info.style.flex = '1';
-
-      const title = document.createElement('a');
-      title.className = `queue-row-title ${item.completed ? 'completed' : ''}`;
-      title.href = item.url;
-      title.target = '_blank';
-      title.textContent = item.title;
-
-      const meta = document.createElement('div');
-      meta.className = 'queue-row-meta';
-      meta.textContent = `${item.channel || 'YouTube'}${item.duration ? ' • ' + item.duration : ''}`;
-
-      info.appendChild(title);
-      info.appendChild(meta);
-
-      const delBtn = document.createElement('button');
-      delBtn.className = 'btn btn-danger';
-      delBtn.style.padding = '4px 10px';
-      delBtn.style.fontSize = '11px';
-      delBtn.textContent = 'Remove';
-      delBtn.addEventListener('click', async () => {
-        await storage.removeFromLearningQueue(item.id);
-        const updated = await storage.getLearningQueue();
-        renderQueueList(updated);
-        navQueueCount.textContent = updated.filter(q => !q.completed).length;
+      // Remove single lesson
+      row.querySelector('button').addEventListener('click', async () => {
+        await storage.removeFromLearningQueue(playlistItem.id, vid.videoId);
+        await loadAllData();
       });
 
-      row.appendChild(check);
-      row.appendChild(info);
-      row.appendChild(delBtn);
-      fullQueueList.appendChild(row);
+      container.appendChild(row);
+    });
+  }
+
+  async function loadAnalytics(range) {
+    const data = await storage.getWatchAnalytics(range);
+
+    anTotalTime.textContent = formatSecs(data.totalWatchTimeSeconds);
+    anPeriodLabel.textContent = range === 'today' ? "Today" : (range === 'yesterday' ? "Yesterday" : (range === '30d' ? "Last 30 days" : "Last 7 days"));
+    anFocusTime.textContent = formatSecs(data.focusedTimeSeconds);
+    anFocusPct.textContent = `${data.focusPercentage}% of total`;
+    anLearningTime.textContent = formatSecs(data.learningTimeSeconds);
+    anLearningPct.textContent = `${data.learningPercentage}% of total`;
+    anAvgSession.textContent = formatSecs(data.averageSessionSeconds);
+    anLongestSession.textContent = `Longest: ${formatSecs(data.longestSessionSeconds)}`;
+
+    renderAnalyticsChart(data.dailyBreakdown);
+  }
+
+  function renderAnalyticsChart(daily) {
+    analyticsBarChart.innerHTML = '';
+
+    if (!daily || daily.length === 0 || daily.every(d => d.totalMins === 0)) {
+      analyticsBarChart.innerHTML = `
+        <div style="width: 100%; text-align: center; color: var(--text-muted); padding: 40px 0;">
+          No watch-time recorded yet. Play a YouTube video to see real local analytics here.
+        </div>
+      `;
+      return;
+    }
+
+    const maxMins = Math.max(...daily.map(d => d.totalMins), 60);
+
+    daily.forEach(d => {
+      const col = document.createElement('div');
+      col.className = 'chart-col';
+
+      const totalHeightPct = Math.min(100, Math.round((d.totalMins / maxMins) * 100));
+      const focusHeightPct = d.totalMins > 0 ? Math.min(100, Math.round((d.focusMins / d.totalMins) * 100)) : 0;
+
+      col.innerHTML = `
+        ${d.totalMins > 0 ? `<span class="bar-value">${d.totalMins}m</span>` : ''}
+        <div class="bar-wrapper" title="${d.date}: ${d.totalMins}m total (${d.focusMins}m focused)">
+          <div class="bar-total" style="height: ${totalHeightPct}%;">
+            <div class="bar-focused" style="height: ${focusHeightPct}%;"></div>
+          </div>
+        </div>
+        <span class="bar-label">${d.label}</span>
+      `;
+
+      analyticsBarChart.appendChild(col);
+    });
+  }
+
+  async function loadRecentActivity() {
+    const data = await storage.getWatchAnalytics('30d');
+    recentActivityList.innerHTML = '';
+
+    if (!data.recentSessions || data.recentSessions.length === 0) {
+      recentActivityList.innerHTML = `
+        <div style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 13px;">
+          No recent activity recorded yet.
+        </div>
+      `;
+      return;
+    }
+
+    data.recentSessions.slice(0, 5).forEach(s => {
+      const row = document.createElement('div');
+      row.className = 'lesson-row';
+      row.style.padding = '10px 0';
+
+      const mins = Math.max(1, Math.round((s.durationSeconds || 0) / 60));
+
+      row.innerHTML = `
+        <span style="font-size: 16px;">⏱️</span>
+        <div style="flex: 1; min-width: 0;">
+          <a href="https://www.youtube.com/watch?v=${s.videoId}" target="_blank" class="lesson-title" style="font-weight: 500;">${escapeHtml(s.videoTitle || 'YouTube Video')}</a>
+          <div style="font-size: 11px; color: var(--text-muted);">${s.channelTitle || 'YouTube'} • ${s.date}</div>
+        </div>
+        <span class="badge ${s.inFocusMode ? 'badge-blue' : ''}">${mins}m</span>
+      `;
+
+      recentActivityList.appendChild(row);
+    });
+  }
+
+  async function loadSchedules() {
+    const schedules = await storage.getSchedules();
+    schedulesList.innerHTML = '';
+
+    if (schedules.length === 0) {
+      schedulesList.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">⏰</div>
+          <h3>No schedules created</h3>
+          <p>Create scheduled windows to enforce Focus Mode or block YouTube during study or rest hours.</p>
+        </div>
+      `;
+      return;
+    }
+
+    const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+    schedules.forEach((sch, idx) => {
+      const card = document.createElement('div');
+      card.className = 'queue-card';
+
+      const isBlock = sch.mode === 'block';
+
+      card.innerHTML = `
+        <div class="queue-card-main">
+          <label class="switch">
+            <input type="checkbox" class="sch-enable-toggle" ${sch.enabled ? 'checked' : ''}>
+            <span class="slider"></span>
+          </label>
+          <div class="queue-card-info">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="queue-card-title">${escapeHtml(sch.name)}</span>
+              <span class="badge ${isBlock ? 'badge-red' : 'badge-blue'}">${isBlock ? 'Block YouTube' : 'Focus Mode'}</span>
+            </div>
+            <div class="queue-card-meta">
+              <span>⏰ ${sch.startTime} – ${sch.endTime}</span>
+              <span>• ${(sch.days || []).map(d => dayLabels[d]).join(', ')}</span>
+            </div>
+          </div>
+          <button type="button" class="btn btn-danger btn-sm btn-delete-sch">Delete</button>
+        </div>
+      `;
+
+      card.querySelector('.sch-enable-toggle').addEventListener('change', async (e) => {
+        sch.enabled = e.target.checked;
+        await storage.saveSchedules(schedules);
+        showDashToast(`Schedule ${sch.enabled ? 'enabled' : 'disabled'}`, '⏰');
+      });
+
+      card.querySelector('.btn-delete-sch').addEventListener('click', async () => {
+        schedules.splice(idx, 1);
+        await storage.saveSchedules(schedules);
+        await loadSchedules();
+        showDashToast('Schedule deleted', '🗑️');
+      });
+
+      schedulesList.appendChild(card);
     });
   }
 
   function setupEventListeners() {
-    // Add video manually
-    addVideoForm.addEventListener('submit', async (e) => {
+    // Add Video Form
+    formAddVideo.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const url = queueInputUrl.value.trim();
-      const title = queueInputTitle.value.trim();
-      const channel = queueInputChannel.value.trim() || 'Custom';
+      const url = inputVideoUrl.value.trim();
+      const title = inputVideoTitle.value.trim();
+      const channel = inputVideoChannel.value.trim() || 'YouTube';
 
       if (!url || !title) return;
 
-      await storage.addToLearningQueue({
-        url,
+      await storage.addVideoToQueue({
+        sourceUrl: url,
         title,
-        channel,
-        id: 'vid_' + Date.now()
+        channelTitle: channel
       });
 
-      queueInputUrl.value = '';
-      queueInputTitle.value = '';
-      queueInputChannel.value = '';
+      formAddVideo.reset();
+      modalAddVideo.classList.add('hidden');
+      await loadAllData();
+      showDashToast('Video added to Learning Queue', '📚');
+    });
 
-      const updated = await storage.getLearningQueue();
-      renderQueueList(updated);
-      navQueueCount.textContent = updated.filter(q => !q.completed).length;
+    // Add Playlist Form
+    formAddPlaylist.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const urlOrId = inputPlaylistUrl.value.trim();
+      const title = inputPlaylistTitle.value.trim();
+      const channel = inputPlaylistChannel.value.trim() || 'YouTube';
+
+      let playlistId = urlOrId;
+      try {
+        if (urlOrId.includes('list=')) {
+          const parsed = new URL(urlOrId);
+          playlistId = parsed.searchParams.get('list');
+        }
+      } catch (err) {}
+
+      await storage.addPlaylistToQueue({
+        playlistId: playlistId || 'pl_' + Date.now(),
+        title,
+        channelTitle: channel,
+        sourceUrl: urlOrId.startsWith('http') ? urlOrId : `https://www.youtube.com/playlist?list=${playlistId}`,
+        videos: []
+      });
+
+      formAddPlaylist.reset();
+      modalAddPlaylist.classList.add('hidden');
+      await loadAllData();
+      showDashToast('Playlist added to Learning Queue', '📑');
+    });
+
+    // Add Schedule Form
+    formAddSchedule.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = inputSchName.value.trim();
+      const startTime = inputSchStart.value;
+      const endTime = inputSchEnd.value;
+      const mode = selectSchMode.value;
+
+      const schedules = await storage.getSchedules();
+      schedules.push({
+        id: 'sch_' + Date.now(),
+        name,
+        startTime,
+        endTime,
+        days: [0, 1, 2, 3, 4, 5, 6],
+        mode,
+        enabled: true
+      });
+
+      await storage.saveSchedules(schedules);
+      formAddSchedule.reset();
+      modalAddSchedule.classList.add('hidden');
+      await loadSchedules();
+      showDashToast('Schedule added', '⏰');
     });
 
     // Auto-save setting toggles
-    const toggles = [
+    const focusToggles = [
       { el: dashFocusMode, key: 'focusModeEnabled' },
       { el: dashHideHome, key: 'hideHomeFeed' },
       { el: dashHideShorts, key: 'hideShorts' },
       { el: dashHideRecs, key: 'hideRecommendations' },
       { el: dashHideEndscreens, key: 'hideEndScreens' },
       { el: dashHideComments, key: 'hideComments' },
+      { el: dashCourseMode, key: 'courseModeEnabled' },
+      { el: dashScheduleMaster, key: 'scheduleEnabled' }
     ];
 
-    toggles.forEach(({ el, key }) => {
+    focusToggles.forEach(({ el, key }) => {
       el.addEventListener('change', async () => {
         const update = { [key]: el.checked };
         currentSettings = await storage.saveSettings(update);
         ovFocusStatus.textContent = currentSettings.focusModeEnabled ? 'Active' : 'Paused';
-        ovFocusStatus.className = currentSettings.focusModeEnabled ? 'kpi-val text-accent' : 'kpi-val';
+        ovFocusStatus.className = currentSettings.focusModeEnabled ? 'kpi-val text-emerald' : 'kpi-val text-muted';
 
-        // Notify tabs
         chrome.runtime.sendMessage({
           action: ACTIONS.SETTINGS_CHANGED,
           settings: currentSettings
         }).catch(() => {});
+
+        showDashToast('Setting updated', '⚙️');
       });
     });
 
-    // Time Management Inputs
-    [
-      { el: dashDailyLimit, key: 'dailyLimitMinutes' },
-      { el: dashWarningLimit, key: 'dailyWarningMinutes' },
-      { el: dashCooldownWatch, key: 'cooldownWatchMinutes' },
-    ].forEach(({ el, key }) => {
-      el.addEventListener('change', async () => {
-        const val = parseInt(el.value, 10);
-        if (!isNaN(val) && val > 0) {
-          await storage.saveSettings({ [key]: val });
-          ovWatchSub.textContent = `Goal: ${dashDailyLimit.value}m`;
-        }
+    // Daily Limit Presets
+    limitPresetBtns.forEach(btn => {
+      btn.addEventListener('click', async () => {
+        limitPresetBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const limitVal = parseInt(btn.getAttribute('data-limit'), 10);
+        dashDailyLimit.value = limitVal;
+        await storage.saveSettings({ dailyLimitMinutes: limitVal });
+        await loadAllData();
+        showDashToast(`Daily limit set to ${limitVal} minutes`, '⏱️');
       });
+    });
+
+    dashDailyLimit.addEventListener('change', async () => {
+      const val = parseInt(dashDailyLimit.value, 10);
+      if (val > 0) {
+        await storage.saveSettings({ dailyLimitMinutes: val });
+        await loadAllData();
+        showDashToast(`Daily limit set to ${val} minutes`, '⏱️');
+      }
+    });
+
+    // Soft vs Hard Limit
+    btnModeSoft.addEventListener('click', async () => {
+      btnModeSoft.classList.add('active');
+      btnModeHard.classList.remove('active');
+      await storage.saveSettings({ limitMode: 'soft' });
+      showDashToast('Limit mode set to Soft Limit (warnings only)', '💡');
+    });
+
+    btnModeHard.addEventListener('click', async () => {
+      btnModeHard.classList.add('active');
+      btnModeSoft.classList.remove('active');
+      await storage.saveSettings({ limitMode: 'hard' });
+      showDashToast('Limit mode set to Hard Limit (triggers cooldown break)', '🔒');
+    });
+
+    // Warning and Cooldown inputs
+    dashWarningLimit.addEventListener('change', async () => {
+      const val = parseInt(dashWarningLimit.value, 10);
+      if (val > 0) {
+        await storage.saveSettings({ dailyWarningMinutes: val });
+        showDashToast('Warning threshold updated', '⚠️');
+      }
+    });
+
+    dashCooldownMins.addEventListener('change', async () => {
+      const val = parseInt(dashCooldownMins.value, 10);
+      if (val > 0) {
+        await storage.saveSettings({ cooldownMinutes: val });
+        showDashToast('Cooldown break duration updated', '🧘');
+      }
+    });
+
+    // Test Cooldown
+    btnTestCooldown.addEventListener('click', async () => {
+      const mins = parseInt(dashCooldownMins.value, 10) || 10;
+      await storage.setCooldownState(true, mins, 'test');
+      showDashToast(`Cooldown break triggered for ${mins} minutes! Check any YouTube tab.`, '🧘');
+      window.open('https://www.youtube.com', '_blank');
     });
 
     // Export Data
@@ -246,12 +807,17 @@
       const settings = await storage.getSettings();
       const { all } = await storage.getDailyStats();
       const queue = await storage.getLearningQueue();
+      const analytics = await storage.getWatchAnalytics('30d');
+      const schedules = await storage.getSchedules();
 
       const dump = {
         exportDate: new Date().toISOString(),
+        version: '1.0.0',
         settings,
         stats: all,
-        queue
+        queue,
+        schedules,
+        analytics
       };
 
       const blob = new Blob([JSON.stringify(dump, null, 2)], { type: 'application/json' });
@@ -261,24 +827,45 @@
       a.download = `youtube-focus-backup-${new Date().toISOString().slice(0, 10)}.json`;
       a.click();
       URL.revokeObjectURL(url);
+      showDashToast('Backup downloaded successfully', '💾');
     });
 
-    // Reset Defaults
-    btnResetDefaults.addEventListener('click', async () => {
-      if (confirm('Reset all settings to default values? Your learning queue and history will not be deleted.')) {
-        await storage.resetSettings();
-        await loadData();
+    // Clear Watch History
+    btnClearHistory.addEventListener('click', async () => {
+      if (confirm('Are you sure you want to clear your local watch history and sessions?')) {
+        await storage.clearWatchHistory();
+        await loadAllData();
+        showDashToast('Watch history cleared', '🗑️');
       }
     });
 
-    // Clear All Data
-    btnClearAll.addEventListener('click', async () => {
-      if (confirm('Are you sure you want to permanently delete ALL local extension data? This cannot be undone.')) {
-        await chrome.storage.local.clear();
-        await storage.resetSettings();
-        await loadData();
+    // Clear Learning Queue
+    btnClearQueue.addEventListener('click', async () => {
+      if (confirm('Are you sure you want to clear your entire Learning Queue?')) {
+        await storage.clearLearningQueue();
+        await loadAllData();
+        showDashToast('Learning Queue cleared', '🗑️');
       }
     });
+
+    // Reset All Data
+    btnResetAll.addEventListener('click', async () => {
+      if (confirm('WARNING: This will permanently wipe ALL local data (queue, history, analytics, settings) and restore factory defaults. Continue?')) {
+        await storage.resetAllData();
+        await loadAllData();
+        showDashToast('All extension data reset to defaults', '🔄');
+      }
+    });
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
   }
 
   init();
