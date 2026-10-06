@@ -1,0 +1,15 @@
+{
+  "name": "watchflow-website",
+  "version": "1.0.0",
+  "description": "Official product website for WatchFlow — The privacy-first productivity and intentional-learning layer for YouTube.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^5.4.8"
+  }
+}

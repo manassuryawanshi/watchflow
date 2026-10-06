@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy — WatchFlow</title>
+  <meta name="description" content="WatchFlow Privacy Policy: Detailed technical explanation of our local-first architecture and zero-telemetry guarantee.">
+  
+  <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16.png">
+  <link rel="apple-touch-icon" href="/icons/icon-128.png">
+
+  <link rel="stylesheet" href="./src/style.css">
+</head>
+<body>
+
+  <!-- Background Ambience -->
+  <div class="bg-grid"></div>
+
+  <!-- Navigation -->
+  <nav class="site-nav">
+    <div class="container nav-wrapper">
+      <a href="/" class="nav-brand" aria-label="WatchFlow Home">
+        <img src="/assets/watchflow-wordmark.png" alt="WatchFlow" class="nav-logo">
+        <span class="nav-version-badge">v1.0.0</span>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="/#features" class="nav-link">Features</a></li>
+        <li><a href="/#focus-mode" class="nav-link">Focus Mode</a></li>
+        <li><a href="/#curriculum" class="nav-link">Learning Queue</a></li>
+        <li><a href="/#comparison" class="nav-link">Comparison</a></li>
+        <li><a href="./privacy.html" class="nav-link" style="color: var(--text-primary);">Privacy</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <a href="https://github.com/manassuryawanshi/watchflow" target="_blank" rel="noopener noreferrer" class="nav-btn-github">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+            <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+          </svg>
+          <span>GitHub</span>
+        </a>
+        <a href="/" class="btn-primary">← Back to Overview</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Privacy Content -->
+  <main class="container privacy-page-content">
+    <div class="privacy-page-header">
+      <h1 class="privacy-page-title">Privacy Policy</h1>
+      <p class="privacy-meta">Effective Date: October 6, 2026 &bull; WatchFlow v1.0.0</p>
+    </div>
+
+    <div class="privacy-prose">
+      <p>
+        WatchFlow is designed with a fundamental commitment to privacy, data sovereignty, and user autonomy. Unlike algorithmic web services, WatchFlow is built on a <strong>local-first execution model</strong>. We do not operate remote user tracking servers, do not maintain central user profiles, and do not monetize browsing data.
+      </p>
+
+      <h2>1. Local Storage Architecture</h2>
+      <p>
+        All information created, managed, or computed by WatchFlow is stored strictly on your local device via Google Chrome's standard <span class="kbd-badge">chrome.storage.local</span> API. WatchFlow does not transmit this data to external databases or cloud synchronization endpoints.
+      </p>
+
+      <table class="privacy-table-prose">
+        <thead>
+          <tr>
+            <th>Storage Key</th>
+            <th>Type</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>yt_focus_settings</code></td>
+            <td>Object</td>
+            <td>Stores your user preferences (e.g., Focus Mode on/off, daily time limits, Cooldown duration, course mode banner toggles).</td>
+          </tr>
+          <tr>
+            <td><code>yt_focus_learning_queue</code></td>
+            <td>Array</td>
+            <td>Stores your saved videos and course playlists, lecture titles, lesson completion checkboxes, and course duration metrics.</td>
+          </tr>
+          <tr>
+            <td><code>yt_focus_daily_stats</code></td>
+            <td>Object</td>
+            <td>Stores daily viewing second tallies (total watch time, focused study time, learning queue time) aggregated by local date.</td>
+          </tr>
+          <tr>
+            <td><code>yt_focus_recent_sessions</code></td>
+            <td>Array</td>
+            <td>Stores a rolling local record of recent study sessions (video title, channel, duration, timestamp) displayed on the Analytics dashboard.</td>
+          </tr>
+          <tr>
+            <td><code>yt_focus_schedules</code></td>
+            <td>Array</td>
+            <td>Stores user-defined time windows for scheduled Focus Mode or YouTube blocking.</td>
+          </tr>
+          <tr>
+            <td><code>yt_focus_cooldown_state</code></td>
+            <td>Object</td>
+            <td>Stores temporary cooldown break state when hard daily limits are reached.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>2. Zero Telemetry & Network Calls</h2>
+      <p>
+        WatchFlow performs <strong>zero network requests</strong> to any remote backend server, tracking service, or telemetry collector. Specifically:
+      </p>
+      <ul>
+        <li>No analytics SDKs (Google Analytics, Mixpanel, Segment, PostHog, or Sentry) are included in the codebase.</li>
+        <li>No tracking pixels, third-party cookies, or fingerprinting scripts are executed.</li>
+        <li>The extension does not query YouTube Data API servers and requires no API key. All DOM transformations and playlist parsing happen locally in your browser.</li>
+      </ul>
+
+      <h2>3. Permissions Justification</h2>
+      <p>
+        WatchFlow strictly complies with the Google Chrome Web Store Least Privilege policy:
+      </p>
+      <ul>
+        <li><strong><code>storage</code></strong>: Required to read and write your user settings, Learning Queue, and local study analytics in <code>chrome.storage.local</code>.</li>
+        <li><strong><code>activeTab</code></strong>: Allows the extension toolbar popup to detect if you are currently on a YouTube video page to enable the "Add to Queue" action and report active video metadata.</li>
+        <li><strong><code>*://*.youtube.com/*</code></strong>: Host permission required to inject content scripts (<code>youtube.js</code> and <code>youtube.css</code>) into YouTube pages to suppress feeds, render WatchFlow Today, enforce Focus Mode allowlists, and inject the Window Fullscreen player button.</li>
+      </ul>
+      <p>
+        WatchFlow requests <strong>no broad permissions</strong> such as <code>&lt;all_urls&gt;</code>, <code>webRequest</code>, <code>cookies</code>, <code>history</code>, or <code>identity</code>.
+      </p>
+
+      <h2>4. Data Portability & Complete Erasure</h2>
+      <p>
+        You retain complete ownership over your data at all times:
+      </p>
+      <ul>
+        <li><strong>Export to JSON</strong>: From the WatchFlow Dashboard (Settings &rarr; Data Management), you can export your entire Learning Queue and study analytics history as a clean, human-readable JSON file.</li>
+        <li><strong>One-Click Wipe</strong>: You can clear your watch history, empty your Learning Queue, or permanently erase all stored keys and restore factory defaults at any time. When you uninstall the extension, Chrome automatically deletes all local storage associated with WatchFlow.</li>
+      </ul>
+
+      <h2>5. Open Source Transparency</h2>
+      <p>
+        The complete source code of WatchFlow is open source and available for public audit on GitHub at <a href="https://github.com/manassuryawanshi/watchflow" target="_blank" rel="noopener noreferrer" style="color: var(--accent); text-decoration: underline;">https://github.com/manassuryawanshi/watchflow</a>. Any developer can verify that the runtime code adheres strictly to these declarations.
+      </p>
+
+      <h2>6. Policy Updates</h2>
+      <p>
+        If future releases introduce optional cloud backup or synchronization features, those capabilities will be strictly opt-in and will require explicit user consent before any data leaves your local device.
+      </p>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-bottom" style="border-top: none; padding-top: 0;">
+        <span>© 2026 WatchFlow. Released under MIT License.</span>
+        <a href="/" style="color: var(--text-secondary);">← Back to WatchFlow Home</a>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

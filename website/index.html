@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WatchFlow — Take Back Your Time on YouTube</title>
+  <meta name="description" content="WatchFlow turns YouTube into an intentional learning environment with Focus Mode, Learning Queue, playlist courses, and progress tracking.">
+  
+  <!-- Open Graph / Social Metadata -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="WatchFlow — Take Back Your Time on YouTube">
+  <meta property="og:description" content="WatchFlow turns YouTube into an intentional learning environment with Focus Mode, Learning Queue, playlist courses, and progress tracking.">
+  <meta property="og:image" content="/assets/watchflow-boxed.png">
+  
+  <!-- Twitter Metadata -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="WatchFlow — Take Back Your Time on YouTube">
+  <meta name="twitter:description" content="WatchFlow turns YouTube into an intentional learning environment with Focus Mode, Learning Queue, playlist courses, and progress tracking.">
+  <meta name="twitter:image" content="/assets/watchflow-boxed.png">
+
+  <!-- Icons -->
+  <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16.png">
+  <link rel="apple-touch-icon" href="/icons/icon-128.png">
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="./src/style.css">
+</head>
+<body>
+
+  <!-- Background Ambience -->
+  <div class="bg-grid"></div>
+  <div class="bg-glow"></div>
+
+  <!-- Site Navigation -->
+  <nav class="site-nav" aria-label="Main Navigation">
+    <div class="container nav-wrapper">
+      <a href="/" class="nav-brand" aria-label="WatchFlow Home">
+        <img src="/assets/watchflow-wordmark.png" alt="WatchFlow" class="nav-logo">
+        <span class="nav-version-badge">v1.0.0</span>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="#features" class="nav-link">Features</a></li>
+        <li><a href="#focus-mode" class="nav-link">Focus Mode</a></li>
+        <li><a href="#curriculum" class="nav-link">Learning Queue</a></li>
+        <li><a href="#comparison" class="nav-link">Comparison</a></li>
+        <li><a href="./privacy.html" class="nav-link">Privacy</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <a href="https://github.com/manassuryawanshi/watchflow" target="_blank" rel="noopener noreferrer" class="nav-btn-github" aria-label="View WatchFlow on GitHub">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+            <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+          </svg>
+          <span>GitHub</span>
+        </a>
+        <button type="button" class="btn-primary js-open-get-modal">Get WatchFlow</button>
+        <button type="button" class="mobile-nav-toggle" id="mobile-menu-toggle" aria-label="Toggle navigation menu">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <header class="hero-section">
+    <div class="container">
+      <div class="hero-eyebrow">
+        <span class="pulse-dot"></span>
+        <span>Intentional Learning for YouTube</span>
+      </div>
+
+      <h1 class="hero-title">
+        Take back your<br>time on YouTube.
+      </h1>
+
+      <p class="hero-subtitle">
+        Learn intentionally. Watch without drifting. WatchFlow eliminates algorithmic rabbit holes and turns YouTube into a focused, distraction-free study environment.
+      </p>
+
+      <div class="hero-ctas">
+        <button type="button" class="btn-primary btn-lg js-open-get-modal">
+          <span>Get WatchFlow</span>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42 5.43 5.43H5v2.44z"/></svg>
+        </button>
+        <a href="https://github.com/manassuryawanshi/watchflow" target="_blank" rel="noopener noreferrer" class="btn-secondary btn-lg">
+          <span>View on GitHub</span>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M19 19H5V5h7V3H5a2 2 0 00-2 2v14a2 2 0 002 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>
+        </a>
+      </div>
+
+      <!-- Layered Hero Product Showcase -->
+      <div class="hero-visual-wrapper">
+        <div class="device-frame-browser">
+          <div class="browser-header">
+            <div class="browser-dots">
+              <span class="browser-dot dot-red"></span>
+              <span class="browser-dot dot-yellow"></span>
+              <span class="browser-dot dot-green"></span>
+            </div>
+            <div class="browser-address-bar">
+              <svg class="lock-icon" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+              <span>youtube.com</span>
+            </div>
+            <div class="browser-actions"></div>
+          </div>
+          <div class="browser-screen">
+            <img src="/screenshots/watchflow-today.png" alt="WatchFlow Today Focus Home interface replacing YouTube recommendations" width="1280" height="850">
+          </div>
+        </div>
+
+        <!-- Floating Popup Layer -->
+        <div class="floating-popup-card" aria-hidden="true">
+          <img src="/screenshots/popup.png" alt="WatchFlow extension popup" width="320" height="480">
+        </div>
+
+        <!-- Floating Metric Badge -->
+        <div class="floating-feature-pill">
+          <div class="pill-icon">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.2 3.2.8-1.3-4.5-2.7V7z"/></svg>
+          </div>
+          <div class="pill-text">
+            <div class="pill-label">Daily Focus Target</div>
+            <div class="pill-val">48 / 90 min logged</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- The Problem Section -->
+  <section class="section-padding" id="problem">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">The Paradox</span>
+        <h2 class="section-title">
+          YouTube is incredible for learning.<br>
+          It's also incredibly good at distracting you.
+        </h2>
+        <p class="section-desc">
+          One educational search pulls you into algorithmic feeds, endless recommendations, autoplay rabbit holes, and vertical Shorts designed specifically for infinite retention.
+        </p>
+      </div>
+
+      <div class="problem-grid">
+        <div class="problem-card danger">
+          <span class="problem-card-badge">Unfocused Browsing</span>
+          <h3>Algorithmic YouTube</h3>
+          <p>Engineered to maximize time spent rather than knowledge gained.</p>
+          <ul class="problem-list">
+            <li class="problem-item">
+              <span class="problem-icon-danger">✕</span>
+              <span>Endless home recommendations distract before you even begin</span>
+            </li>
+            <li class="problem-item">
+              <span class="problem-icon-danger">✕</span>
+              <span>Sidebar suggestions break concentration during lectures</span>
+            </li>
+            <li class="problem-item">
+              <span class="problem-icon-danger">✕</span>
+              <span>Shorts shelves hijack attention with low-friction loops</span>
+            </li>
+            <li class="problem-item">
+              <span class="problem-icon-danger">✕</span>
+              <span>Saved educational playlists get lost in endless watch history</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="problem-card solution">
+          <span class="problem-card-badge">Intentional Study</span>
+          <h3>WatchFlow Learning Layer</h3>
+          <p>Engineered to keep you locked on your intended curriculum.</p>
+          <ul class="problem-list">
+            <li class="problem-item">
+              <span class="problem-icon-success">✓</span>
+              <span>YouTube Home replaced with clean WatchFlow Today hub</span>
+            </li>
+            <li class="problem-item">
+              <span class="problem-icon-success">✓</span>
+              <span>Strict Focus Mode blocks unqueued, off-topic videos</span>
+            </li>
+            <li class="problem-item">
+              <span class="problem-icon-success">✓</span>
+              <span>Shorts eliminated and redirected to intentional player</span>
+            </li>
+            <li class="problem-item">
+              <span class="problem-icon-success">✓</span>
+              <span>First-class playlist courses with persistent curriculum drawers</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Focus Mode Section -->
+  <section class="section-padding" id="focus-mode">
+    <div class="container">
+      <div class="feature-showcase">
+        <div class="showcase-text">
+          <span class="showcase-eyebrow">Focus Mode</span>
+          <h2 class="showcase-title">Decide what you're here to learn.</h2>
+          <p class="showcase-desc">
+            Focus Mode turns YouTube into a true learning-only environment. When enabled, your queue becomes a strict educational allowlist. Unapproved videos and algorithmic pathways are intercepted with a calming intentional block screen.
+          </p>
+          <ul class="showcase-points">
+            <li class="showcase-point">
+              <span class="point-check">✓</span>
+              <span><strong>Strict Allowlist:</strong> Only queued videos and course lessons can be viewed.</span>
+            </li>
+            <li class="showcase-point">
+              <span class="point-check">✓</span>
+              <span><strong>No Algorithmic Drift:</strong> Autoplay, sidebars, and Up Next cannot bypass your learning list.</span>
+            </li>
+            <li class="showcase-point">
+              <span class="point-check">✓</span>
+              <span><strong>Shorts Redirection:</strong> Direct Shorts links open in standard player with scrubber controls.</span>
+            </li>
+            <li class="showcase-point">
+              <span class="point-check">✓</span>
+              <span><strong>Fast Keyboard Shortcut:</strong> Press <span class="kbd-badge">Alt + F</span> to toggle Focus Mode instantly.</span>
+            </li>
+          </ul>
+        </div>
+        <div class="showcase-visual">
+          <img src="/screenshots/focus-blocked-screen.png" alt="Focus Mode intentional block screen protecting study time" width="800" height="500">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Learning Queue Section -->
+  <section class="section-padding" id="curriculum">
+    <div class="container">
+      <div class="feature-showcase reverse">
+        <div class="showcase-text">
+          <span class="showcase-eyebrow">Curriculum Engine</span>
+          <h2 class="showcase-title">Turn videos into a curriculum.</h2>
+          <p class="showcase-desc">
+            Save individual tutorials or entire multi-hour playlists. WatchFlow preserves course structures as first-class citizens, letting you track lessons step-by-step without cluttering your queue.
+          </p>
+
+          <div class="workflow-chain">
+            <div class="workflow-step">
+              <span class="step-num">01</span>
+              <span class="step-name">Playlist</span>
+            </div>
+            <span class="workflow-arrow">→</span>
+            <div class="workflow-step">
+              <span class="step-num">02</span>
+              <span class="step-name">Lessons</span>
+            </div>
+            <span class="workflow-arrow">→</span>
+            <div class="workflow-step">
+              <span class="step-num">03</span>
+              <span class="step-name">Progress</span>
+            </div>
+            <span class="workflow-arrow">→</span>
+            <div class="workflow-step">
+              <span class="step-num">04</span>
+              <span class="step-name">Continue</span>
+            </div>
+          </div>
+
+          <ul class="showcase-points">
+            <li class="showcase-point">
+              <span class="point-check">✓</span>
+              <span><strong>Preserved Curriculum Drawers:</strong> Expanding a course stays open while you complete lessons.</span>
+            </li>
+            <li class="showcase-point">
+              <span class="point-check">✓</span>
+              <span><strong>Lesson Checklists:</strong> Mark individual lectures complete or delete topics you have mastered.</span>
+            </li>
+            <li class="showcase-point">
+              <span class="point-check">✓</span>
+              <span><strong>90% Auto-Complete:</strong> Videos automatically mark finished upon reaching the 90% threshold.</span>
+            </li>
+            <li class="showcase-point">
+              <span class="point-check">✓</span>
+              <span><strong>Smart Intelligence:</strong> Calculates total course length, remaining time, and completion rates.</span>
+            </li>
+          </ul>
+        </div>
+        <div class="showcase-visual">
+          <img src="/screenshots/dashboard-queue.png" alt="Learning Queue dashboard with expanded course curriculum" width="800" height="540">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WatchFlow Today Section -->
+  <section class="section-padding" id="today">
+    <div class="container">
+      <div class="feature-showcase">
+        <div class="showcase-text">
+          <span class="showcase-eyebrow">Focus Home</span>
+          <h2 class="showcase-title">Always know what to learn next.</h2>
+          <p class="showcase-desc">
+            YouTube Home in Focus Mode becomes WatchFlow Today: a calm, unified productivity screen. The moment you open YouTube, you immediately see your progress and resume your active course with a single click.
+          </p>
+          <ul class="showcase-points">
+            <li class="showcase-point">
+              <span class="point-check">✓</span>
+              <span><strong>Today Progress Ring:</strong> Live feedback showing daily study minutes logged vs your target.</span>
+            </li>
+            <li class="showcase-point">
+              <span class="point-check">✓</span>
+              <span><strong>Continue Learning Card:</strong> One click jumps directly to the next unfinished lesson.</span>
+            </li>
+            <li class="showcase-point">
+              <span class="point-check">✓</span>
+              <span><strong>Next-Up Preview:</strong> Compact single-line lesson list with truncation and full title tooltips.</span>
+            </li>
+            <li class="showcase-point">
+              <span class="point-check">✓</span>
+              <span><strong>Direct Deep Links:</strong> Jump into your full Learning Queue, Analytics, or Settings instantly.</span>
+            </li>
+          </ul>
+        </div>
+        <div class="showcase-visual">
+          <img src="/screenshots/watchflow-today.png" alt="WatchFlow Today hub screen on YouTube Home" width="800" height="500">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Comparison Table Section -->
+  <section class="section-padding" id="comparison">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Learning Without The Noise</span>
+        <h2 class="section-title">A deliberate study layer.</h2>
+        <p class="section-desc">WatchFlow is not just a site blocker. It is a full productivity architecture built for intentional learners.</p>
+      </div>
+
+      <div class="comparison-table-wrapper">
+        <table class="comparison-table">
+          <thead>
+            <tr>
+              <th>Dimension</th>
+              <th>Traditional YouTube</th>
+              <th>WatchFlow v1.0.0</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Home Feed</strong></td>
+              <td>Algorithmic recommendation grid</td>
+              <td>WatchFlow Today productivity hub</td>
+            </tr>
+            <tr>
+              <td><strong>Watch Page Distractions</strong></td>
+              <td>Related videos, comments, promotional tiles</td>
+              <td>Clean player, hidden sidebars, course playlists preserved</td>
+            </tr>
+            <tr>
+              <td><strong>YouTube Shorts</strong></td>
+              <td>Infinite doom-scrolling feed</td>
+              <td>Hidden or automatically redirected to standard player</td>
+            </tr>
+            <tr>
+              <td><strong>Course Management</strong></td>
+              <td>Fragmented playlists and lost history</td>
+              <td>Structured Learning Queue with expandable lesson drawers</td>
+            </tr>
+            <tr>
+              <td><strong>Study Enforcement</strong></td>
+              <td>None; reliance on pure willpower</td>
+              <td>Focus Mode allowlist with intentional block screen</td>
+            </tr>
+            <tr>
+              <td><strong>Player Experience</strong></td>
+              <td>Standard theater or OS fullscreen</td>
+              <td>Window Fullscreen mode (<span class="kbd-badge">W</span>) preserving browser tabs</td>
+            </tr>
+            <tr>
+              <td><strong>Data & Privacy</strong></td>
+              <td>Cloud telemetry and algorithmic profile tracking</td>
+              <td>100% local device storage (<span class="kbd-badge">chrome.storage.local</span>)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Productivity Grid (Secondary Features) -->
+  <section class="section-padding" id="features">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Supporting Architecture</span>
+        <h2 class="section-title">Crafted for serious focus.</h2>
+        <p class="section-desc">Small details that make studying on YouTube frictionless and sustainable.</p>
+      </div>
+
+      <div class="productivity-grid">
+        <div class="productivity-card">
+          <div class="productivity-card-icon">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+          </div>
+          <h3>Window Fullscreen <span class="kbd-badge">W</span></h3>
+          <p>Expands the YouTube video to fill 100% of your browser window without entering OS fullscreen. Tabs and address bar stay accessible.</p>
+        </div>
+
+        <div class="productivity-card">
+          <div class="productivity-card-icon">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
+          </div>
+          <h3>Local Learning Analytics</h3>
+          <p>Track your actual study time versus passive browsing across Today, Yesterday, 7 Days, and 30 Days. Stored 100% locally on your machine.</p>
+        </div>
+
+        <div class="productivity-card">
+          <div class="productivity-card-icon">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm1-13h-2v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+          </div>
+          <h3>Configurable Daily Limits</h3>
+          <p>Choose between gentle notification toasts (Soft Mode) or an enforceable calming Cooldown break screen (Hard Mode) when study time ends.</p>
+        </div>
+
+        <div class="productivity-card">
+          <div class="productivity-card-icon">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z"/></svg>
+          </div>
+          <h3>Scheduled Study Windows</h3>
+          <p>Automate Focus Mode enforcement during work hours or study periods (e.g. 09:00 to 13:00) so focus requires zero willpower.</p>
+        </div>
+
+        <div class="productivity-card">
+          <div class="productivity-card-icon">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+          </div>
+          <h3>Course Mode Banner</h3>
+          <p>When studying inside a queued course, an in-video banner shows lesson numbers, progress percentages, and direct next-lesson navigation.</p>
+        </div>
+
+        <div class="productivity-card">
+          <div class="productivity-card-icon">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
+          </div>
+          <h3>JSON Export & Wipe Controls</h3>
+          <p>Full sovereign control over your data. Export your entire queue and analytics to a JSON backup or wipe local storage in one click.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Privacy Section -->
+  <section class="section-padding" id="privacy">
+    <div class="container">
+      <div class="privacy-wrapper">
+        <span class="section-tag">Privacy Architecture</span>
+        <h2 class="section-title">Your learning data stays yours.</h2>
+        <p class="section-desc" style="max-width: 600px; margin: 0 auto;">
+          WatchFlow operates on a strict local-first philosophy. We do not track your activity, collect watch history, or transmit analytics to external servers.
+        </p>
+
+        <div class="privacy-grid">
+          <div class="privacy-item">
+            <h4>100% Local Storage</h4>
+            <p>Your queue, lesson checkmarks, watch stats, and settings are saved directly in Chrome's local extension storage on your device.</p>
+          </div>
+          <div class="privacy-item">
+            <h4>Zero Remote Servers</h4>
+            <p>No backend servers, API proxies, cloud databases, or tracking endpoints. Core features require zero internet communication.</p>
+          </div>
+          <div class="privacy-item">
+            <h4>No YouTube API Key</h4>
+            <p>WatchFlow functions entirely client-side without requiring you to create Google Cloud accounts or paste YouTube Data API keys.</p>
+          </div>
+        </div>
+
+        <a href="./privacy.html" class="btn-secondary">Read Detailed Privacy Policy →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Philosophy Section -->
+  <section class="philosophy-section">
+    <div class="container">
+      <h2 class="philosophy-title">Less consumption.<br>More intention.</h2>
+      <p class="philosophy-text">
+        WatchFlow isn't here to help you watch more YouTube. It's here to help you decide what is worth watching—and give you the quiet environment to actually learn it.
+      </p>
+    </div>
+  </section>
+
+  <!-- Final CTA Section -->
+  <section class="cta-section">
+    <div class="container">
+      <div class="cta-box">
+        <h2>Make YouTube work for you.</h2>
+        <p>Build a learning queue. Turn on Focus Mode. Keep moving.</p>
+        <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+          <button type="button" class="btn-primary btn-lg js-open-get-modal">Get WatchFlow</button>
+          <a href="https://github.com/manassuryawanshi/watchflow" target="_blank" rel="noopener noreferrer" class="btn-secondary btn-lg">View on GitHub</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Site Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <img src="/assets/watchflow-wordmark.png" alt="WatchFlow" class="footer-logo">
+          <p class="footer-desc">
+            The privacy-first productivity and intentional-learning layer for YouTube.
+          </p>
+        </div>
+
+        <div class="footer-col">
+          <h5>Product</h5>
+          <ul>
+            <li><a href="#focus-mode">Focus Mode</a></li>
+            <li><a href="#curriculum">Learning Queue</a></li>
+            <li><a href="#today">WatchFlow Today</a></li>
+            <li><a href="#features">Window Fullscreen</a></li>
+            <li><a href="./privacy.html">Privacy Policy</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h5>Resources</h5>
+          <ul>
+            <li><a href="https://github.com/manassuryawanshi/watchflow" target="_blank" rel="noopener noreferrer">GitHub Repository</a></li>
+            <li><a href="https://github.com/manassuryawanshi/watchflow/releases/tag/v1.0.0" target="_blank" rel="noopener noreferrer">v1.0.0 Release</a></li>
+            <li><a href="https://github.com/manassuryawanshi/watchflow/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">Changelog</a></li>
+            <li><a href="https://github.com/manassuryawanshi/watchflow/blob/main/TESTING.md" target="_blank" rel="noopener noreferrer">QA Documentation</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h5>Distribution</h5>
+          <ul>
+            <li><a href="#" class="js-open-get-modal">Chrome Web Store (Review)</a></li>
+            <li><a href="https://github.com/manassuryawanshi/watchflow#load-unpacked-in-google-chrome" target="_blank" rel="noopener noreferrer">Load Unpacked Guide</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <span>© 2026 WatchFlow. Released under MIT License.</span>
+        <span>Independent product. Not affiliated with YouTube or Google LLC.</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Modal Dialog: "Get WatchFlow" -->
+  <div class="modal-backdrop" id="get-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3 id="modal-title">Get WatchFlow</h3>
+        <button type="button" class="modal-close" id="modal-close-btn" aria-label="Close dialog">✕</button>
+      </div>
+
+      <div class="modal-option">
+        <h4>
+          <span>🚀</span>
+          <span>GitHub Release (v1.0.0 Available Now)</span>
+        </h4>
+        <p>WatchFlow v1.0.0 is open source. You can download the verified release package and load it into Chrome in 30 seconds.</p>
+        <div style="margin-top: 12px; display: flex; gap: 8px;">
+          <a href="https://github.com/manassuryawanshi/watchflow/releases/tag/v1.0.0" target="_blank" rel="noopener noreferrer" class="btn-primary" style="font-size: 13px; padding: 6px 12px;">Download v1.0.0 ZIP</a>
+          <a href="https://github.com/manassuryawanshi/watchflow#load-unpacked-in-google-chrome" target="_blank" rel="noopener noreferrer" class="btn-secondary" style="font-size: 13px; padding: 6px 12px;">Setup Guide</a>
+        </div>
+      </div>
+
+      <div class="modal-option" style="opacity: 0.85;">
+        <h4>
+          <span>🌐</span>
+          <span>Chrome Web Store Listing</span>
+        </h4>
+        <p>The official Chrome Web Store package is packaged and in developer review. The one-click install link will appear here once published.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Client Script -->
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>

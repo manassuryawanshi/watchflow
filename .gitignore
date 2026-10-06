@@ -28,8 +28,9 @@ yarn-error.log*
 # Test coverage and automation artifacts
 coverage/
 .nyc_output/
-test-results/
-screenshots/
+/test-results/
+/screenshots/
+!website/public/screenshots/
 *.webm
 *.webp
 

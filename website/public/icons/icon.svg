@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="wfBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#181818" />
+      <stop offset="100%" stop-color="#0f0f0f" />
+    </linearGradient>
+    <linearGradient id="wfRed" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff1a1a" />
+      <stop offset="100%" stop-color="#cc0000" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background Base Container -->
+  <rect x="8" y="8" width="112" height="112" rx="28" fill="url(#wfBg)" stroke="#272727" stroke-width="2.5" />
+
+  <!-- Distinctive WatchFlow "W" + Flow Wings Iconography -->
+  <!-- Left Wing & Central Flow Apex (Clean Crisp White #F1F1F1) -->
+  <path d="M26 38 L42 90 L58 50 L64 64 L48 98 L20 42 Z" fill="#f1f1f1" />
+  
+  <!-- Right Wing Flow & Precision Focus Accent (WatchFlow Red #FF0000) -->
+  <path d="M64 64 L74 38 L92 90 L108 38 L114 42 L96 98 L78 50 Z" fill="url(#wfRed)" />
+
+  <!-- Central Intention Focus Core (Subtle Red Pulse Dot) -->
+  <circle cx="64" cy="28" r="4.5" fill="#ff0000" />
+</svg>
