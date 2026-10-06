@@ -1,0 +1,52 @@
+# Dependencies
+node_modules/
+jspm_packages/
+
+# Environment and sensitive files
+.env
+.env.*
+*.env
+*.pem
+*.key
+*.token
+credentials.*
+
+# Build, distribution and packages
+dist/
+build/
+*.zip
+*.tar.gz
+*.crx
+
+# Logs and debug
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Test coverage and automation artifacts
+coverage/
+.nyc_output/
+test-results/
+screenshots/
+*.webm
+*.webp
+
+# OS and editor metadata
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Antigravity & AI development artifacts
+.agents/
+.gemini/
+scratch/

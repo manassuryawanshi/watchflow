@@ -1,41 +1,138 @@
-# YouTube Focus — Chrome Extension (Manifest V3)
+# WatchFlow
 
-> **Watch intentionally. Not endlessly.**
+> A privacy-first productivity and intentional-learning layer for YouTube.
 
-**YouTube Focus** is a privacy-first productivity and learning layer for YouTube. Designed specifically for students, autodidacts, developers, and professionals, it eliminates algorithmic rabbit holes and provides an intentional viewing environment without breaking playback, course navigation, or search.
+WatchFlow transforms YouTube from an algorithmic distraction loop into a focused, deliberate learning environment. Designed for students, developers, researchers, and lifelong learners, WatchFlow eliminates recommendations, reels, and feeds while preserving native playback controls, course playlists, and educational workflows.
 
 ---
 
-## Architecture Overview
+## Overview
 
-Built strictly on **Google Chrome Manifest V3** with zero external dependencies, no telemetry, and a 100% local persistence model.
+Modern YouTube is engineered around algorithmic retention, constantly serving high-engagement recommendations, infinite Shorts, and related video sidebars. For intentional learners, this creates constant cognitive friction.
+
+WatchFlow runs as a lightweight, privacy-preserving Google Chrome Extension (Manifest V3) that sits between you and YouTube. It provides:
+
+- **True Focus Mode**: Converts YouTube into a strict, distraction-free study environment where only intentionally queued learning content is accessible.
+- **WatchFlow Today**: Replaces the YouTube recommendation feed with a clean, actionable daily productivity hub.
+- **First-Class Learning Queue**: Supports individual videos and full structured playlist courses with independent curriculum drawers and lesson checklists.
+- **Window Fullscreen**: Maximizes the video player to 100% of the browser window viewport with zero OS-level fullscreen friction, controlled via keyboard (`W`).
+- **Local-Only Analytics**: Tracks real study time and learning metrics with 100% local device storage and zero telemetry.
+
+---
+
+## Why WatchFlow
+
+| Traditional YouTube | With WatchFlow |
+| :--- | :--- |
+| Endless algorithmic home recommendations | Replaced with "WatchFlow Today" productivity hub |
+| Addictive, vertical doom-scrolling Shorts | Completely eliminated or redirected to standard player |
+| Distracting sidebar suggestions during study | Hidden to maintain deep focus |
+| Fragmented watch history and lost tutorials | Curated, organized Learning Queue with playlist curriculum tracking |
+| Cluttered UI with headers and comment sections | Clean Window Fullscreen mode preserving browser tabs |
+| Third-party telemetry and cloud tracking | 100% local execution and storage (`chrome.storage.local`) |
+
+---
+
+## Features
+
+### 1. Focus Mode (Learning-Only Mode)
+- **Strict Allowlist Security**: When Focus Mode is active, only content in your Learning Queue or explicit learning playlists can be watched. Unapproved videos and algorithmic suggestions are intercepted with an intentional block screen.
+- **Shorts Elimination & Redirection**: Shorts navigation and shelves are eliminated. Direct Shorts links redirect seamlessly to the standard `/watch?v=` player with scrub bars and playback speed controls.
+- **Watch Page De-cluttering**: Algorithmic recommendations (`#related`), promotional end-screen tiles, and secondary suggestions are neutralized while keeping player controls and course playlists intact.
+- **Floating Status Pill**: Non-intrusive on-screen indicator (`FOCUS MODE ACTIVE`) for quick status inspection and toggling.
+- **Keyboard Shortcut**: Press `Alt + F` (configurable in Chrome) to toggle Focus Mode instantly.
+
+### 2. WatchFlow Today (Focus Home Hub)
+When visiting YouTube Home in Focus Mode, the algorithmic grid is replaced with a single, elegant productivity hub:
+- **Official WatchFlow Branding**: High-resolution brand wordmark and Focus status badge.
+- **Daily Progress Metrics**: Live progress ring showing study minutes logged versus your daily target.
+- **Continue Learning Card**: One-click action to resume the next incomplete lesson across your queued courses.
+- **Learning Queue Next-Up Preview**: Compact, single-line preview of your upcoming lessons with ellipsis overflow protection and full title tooltips.
+- **Deep Links**: Direct shortcuts to your full Learning Queue, Analytics, and Settings.
+
+### 3. Learning Queue & Course Learning
+- **Individual Videos & Playlists**: Add single videos or entire multi-part tutorial series directly from YouTube pages or manual URL input.
+- **Curriculum Preservation**: Expandable course drawers (`Lessons ▼`) retain their open/collapsed state across lesson completions, deletions, and filter changes.
+- **Lesson Checklists**: Track progress item-by-item; individual lessons can be marked completed or removed without destroying the playlist container.
+- **Auto-Completion**: Videos and lessons automatically mark as complete upon reaching the 90% watched threshold.
+- **Smart Queue Intelligence**: Computes total course duration, remaining watch time, and completion percentages.
+- **Filter Views**: Easily filter between `All`, `Videos`, `Playlists`, `In Progress`, and `Completed`.
+
+### 4. Window Fullscreen Mode
+- **Viewport Fill**: Expands the player to 100vw × 100vh of the browser window without triggering OS-level fullscreen.
+- **Preserved Chrome Controls**: Browser tabs, address bar, and operating system controls remain readily accessible.
+- **Keyboard Shortcut (`W`)**: Press `W` (or `Shift + W`) on any watch page to toggle Window Fullscreen. Built-in input and repeat guards prevent accidental toggles while typing comments or search queries.
+- **Escape Key Guard**: Press `Escape` to instantly exit Window Fullscreen.
+- **Player Injected Button**: Dedicated control button added directly next to native theater and fullscreen controls.
+
+### 5. Analytics, Limits & Schedules
+- **Local Time Tracking**: Accurate second-by-second tracking of focused study time and general watch time.
+- **Visual Analytics Dashboard**: Visual charts comparing Today, Yesterday, Last 7 Days, and Last 30 Days.
+- **Daily Time Limits**: Configurable soft limits (gentle toasts) or hard limits (calming Cooldown break screen).
+- **Scheduled Study Windows**: Automate Focus Mode enforcement during dedicated study or rest hours (e.g., 09:00–17:00).
+
+---
+
+## Privacy Architecture
+
+WatchFlow is built on strict privacy principles:
+- **Zero Remote Servers**: No backend servers, API proxies, or cloud endpoints.
+- **Zero Telemetry or Analytics SDKs**: No Google Analytics, Mixpanel, Sentry, or tracking pixels.
+- **100% Local Storage**: All settings, queue items, and session metrics are stored directly on your machine via `chrome.storage.local`.
+- **Minimal Permissions**: Operates exclusively with `storage` and `activeTab` permissions, plus `*://*.youtube.com/*` host permissions for content injection.
+- **Data Export & Wipe**: Export your complete queue and analytics to JSON or permanently wipe all data in one click from the dashboard.
+
+---
+
+## Tech Stack
+
+- **Platform**: Google Chrome Extension (Manifest V3)
+- **Core Languages**: Vanilla JavaScript (ES2022+), Semantic HTML5, CSS3
+- **Styling Architecture**: Custom dark-mode design system tailored to YouTube and YouTube Studio aesthetic tokens
+- **Persistence Layer**: `chrome.storage.local` with optimized transactional helpers
+- **Testing**: Node.js automated test runner and Chrome DevTools Protocol (CDP) test suites
+
+---
+
+## Project Structure
 
 ```
-Youtube-focus/
-├── manifest.json              # Chrome Manifest V3 declaration
-├── README.md                  # Complete documentation and setup guide
-├── TESTING.md                 # Manual QA and verification checklist
+watchflow/
+├── manifest.json              # Chrome Extension Manifest V3 configuration
+├── README.md                  # Comprehensive documentation and architecture
+├── CHANGELOG.md               # Version history and release notes
+├── RELEASE_CHECKLIST.md       # Pre-flight and release verification checklist
+├── TESTING.md                 # Manual QA and verification guide
+├── .gitignore                 # Production Git exclusions
+├── tests/                     # Automated unit and browser test suites
+│   ├── test_all_features.mjs
+│   ├── test_w_shortcut.mjs
+│   ├── test_playlist_expansion_preservation.mjs
+│   └── test_queue_title_overflow.mjs
 └── src/
-    ├── icons/                 # High-resolution raster & vector icons
+    ├── assets/                # Official brand identity assets
+    │   ├── watchflow-boxed.png
+    │   └── watchflow-wordmark.png
+    ├── icons/                 # Extension toolbar & store icons
     │   ├── icon-16.png
     │   ├── icon-32.png
     │   ├── icon-48.png
     │   ├── icon-128.png
     │   └── icon.svg
-    ├── shared/                # Core universal utilities
-    │   ├── constants.js       # Centralized DOM selectors & action messages
-    │   ├── storage.js         # chrome.storage.local abstraction layer
-    │   └── logger.js          # Configurable namespaced console logger
+    ├── shared/                # Universal utilities across execution contexts
+    │   ├── constants.js       # Action messages, storage keys, DOM selectors
+    │   ├── logger.js          # Namespaced logger with debug gating
+    │   └── storage.js         # Transactional storage engine and queue intelligence
     ├── background/
-    │   └── service-worker.js  # MV3 service worker for shortcuts & lifecycle
-    ├── content/               # Injected YouTube engine
-    │   ├── youtube.js         # Window Fullscreen, Focus Mode & SPA tracker
-    │   └── youtube.css        # Styles for player expansion & distraction filters
-    ├── popup/                 # Minimalist browser action popup
+    │   └── service-worker.js  # MV3 background service worker and shortcut coordinator
+    ├── content/               # YouTube DOM injection scripts
+    │   ├── youtube.js         # Core Focus Mode engine, WatchFlow Today hub, player button
+    │   └── youtube.css        # Scoped UI styles, animations, and feed suppression
+    ├── popup/                 # Browser action toolbar popup
     │   ├── popup.html
     │   ├── popup.css
     │   └── popup.js
-    └── dashboard/             # Standalone options & learning dashboard
+    └── dashboard/             # Fullscreen management options page
         ├── dashboard.html
         ├── dashboard.css
         └── dashboard.js
@@ -43,132 +140,56 @@ Youtube-focus/
 
 ---
 
-## Phase 1 Feature Set
+## Development Setup
 
-### 1. Window Fullscreen (Not OS Fullscreen)
-- **Viewport Fill**: Expands the YouTube player to 100% width and 100% height of the browser's viewport.
-- **Chrome UI Preserved**: Chrome tabs, address bar, bookmarks, and OS taskbars remain visible and accessible.
-- **Clutter Elimination**: Automatically hides the masthead/header, comments, description, sidebars, and live chat while active.
-- **Native Player Controls**: Preserves all video controls (play/pause, seek scrubber, volume, subtitles, playback speed, quality gear menu).
-- **Player Injected Button**: Adds a dedicated Window Fullscreen button into YouTube's player controls bar (`.ytp-right-controls`) right next to the native theater/fullscreen buttons.
-- **Keyboard Shortcuts**:
-  - `W`: Toggle Window Fullscreen on watch pages.
-  - `Escape`: Instantly exit Window Fullscreen.
-- **Responsive**: Automatically resizes with the browser window and fires layout recalculation events to `#movie_player`.
-- **SPA Resilience**: Survives in-page YouTube navigations without page reload.
+### Prerequisites
+- Google Chrome (version 114 or later recommended)
+- Node.js (v20+ recommended for running automated test suites)
 
-### 2. Focus Mode
-- **Home Feed Suppression**: Replaces the endless algorithmic home feed with an **Intentional Focus Hub**:
-  - Distraction-free direct search bar.
-  - Quick intentional links (Subscriptions feed, Watch History).
-  - Deliberate "Temporarily reveal home feed" escape hatch if needed.
-- **Shorts Elimination & Redirection**:
-  - Hides Shorts shelf carousels and sidebar navigation buttons.
-  - Automatically redirects any direct `/shorts/VIDEO_ID` URL to the intentional `/watch?v=VIDEO_ID` player so users receive standard playback and speed controls instead of infinite vertical scrolling.
-- **Watch Page Recommendations**: Hides `#related` and secondary suggestions on watch pages.
-- **Course & Playlist Preservation**: Explicitly preserves playlist panels (`ytd-playlist-panel-renderer`) so educational courses and tutorial playlists remain 100% accessible.
-- **End-Screen Suggestions**: Neutralizes floating promotional tiles (`.ytp-ce-element`) that clutter video conclusions.
-- **On-Screen Status Pill**: Displays an unobtrusive floating indicator (`FOCUS MODE Active`) with quick toggle support.
-
-### 3. Complete Learning Queue (Videos & Playlists)
-- **First-Class Playlists & Individual Videos**:
-  - Save individual videos or entire YouTube playlists without needing a YouTube Data API key.
-  - Logical container: Playlists stay organized with curriculum expansion, lesson checklists, and individual deletion without cluttering the queue.
-  - YouTube In-Page Quick Add: Directly click `[+ Add to Queue]` or `[+ Add Playlist to Queue]` on YouTube watch and playlist pages.
-  - Auto-Mark Completion: Automatically marks a lesson or video completed when reaching a 90% watched threshold.
-  - "Continue Learning": One-click button that resumes the next incomplete item across all queued courses.
-
-### 4. Watch-Time Tracking & Analytics
-- **Local Session Tracking**: Records viewing sessions (duration, focus status, video, date) locally in `chrome.storage.local`.
-- **Zero Telemetry**: Never sends watch history or analytics to external servers.
-- **Visual Analytics Dashboard**: Interactive charts for Today, Last 7 Days, and Last 30 Days showing total watch time, focused percentage, learning percentage, and average session length.
-
-### 5. Daily Limits, Cooldown & Scheduled Blocking
-- **Configurable Daily Limits**: Presets (30m, 45m, 60m, 90m, 120m) and custom limits with 75% and 90% gentle warnings.
-- **Soft vs. Hard Limit Modes**:
-  - **Soft Limit**: Shows gentle toast notifications and encourages pausing.
-  - **Hard Limit**: Triggers a mandatory calming Cooldown break screen with live countdown timer when the limit is exceeded.
-- **Scheduled Focus / Blocking**: Automatically activates Focus Mode or completely blocks YouTube during specific scheduled windows (e.g. Study Hours 09:00–13:00, Night Rest 22:00–07:00).
-
-### 6. Course Mode Banner
-- When playing a video that belongs to an active playlist course in your Learning Queue, a sleek Course Mode banner appears showing Lesson X of Y, percentage progress, and a direct `[Next Lesson ➔]` button.
-
-### 7. Extension Popup & State Engine
-- Minimal, premium dark design matching the Dashboard.
-- Live watch time vs. daily limit indicator.
-- Fast toggles for Window Fullscreen (`W`) and Focus Mode (`ON/OFF`).
-- Quick Actions bar (`[Window Fullscreen]`, `[Focus Mode]`, `[Add to Queue]`, `[Open Queue]`).
-- Quick Queue drawer and one-click access to the full Dashboard.
+### Load Unpacked in Chrome
+1. Clone or download this repository.
+2. Open Chrome and navigate to `chrome://extensions`.
+3. Enable **Developer mode** via the toggle in the top-right corner.
+4. Click **Load unpacked** and select the repository root directory.
+5. The extension **WatchFlow** will load and appear in your extensions list.
 
 ---
 
-## Permissions Analysis & Documentation
+## Testing
 
-YouTube Focus strictly abides by the principle of **least privilege**:
+Run the automated test suite directly from the project root:
 
-| Permission | Scope | Why It Is Required |
-| :--- | :--- | :--- |
-| `storage` | Local Extension Storage | Persists user preferences (e.g., Focus Mode on/off), the Learning Queue, and local viewing statistics in `chrome.storage.local`. |
-| `activeTab` | Active Browser Tab | Allows the popup to detect whether the user is currently on YouTube, read the current video's title to enable "Add to Queue", and trigger Window Fullscreen. |
-| `https://www.youtube.com/*` | Host Permission | Required to inject content scripts (`youtube.js`, `youtube.css`) and manipulate YouTube's player DOM and distraction elements. |
+```bash
+# 1. Run core logic, queue intelligence, and storage unit tests
+node tests/test_all_features.mjs
 
-*No broader permissions (`<all_urls>`, `webRequest`, `cookies`, `tabs`, `identity`) are requested.*
+# 2. Run Window Fullscreen 'W' shortcut tests
+node tests/test_w_shortcut.mjs
 
----
+# 3. Run Real-Chrome Learning Queue playlist expansion state tests
+node --experimental-websocket tests/test_playlist_expansion_preservation.mjs
 
-## Privacy Policy & Architecture
+# 4. Run Real-Chrome WatchFlow Today title overflow and layout tests
+node --experimental-websocket tests/test_queue_title_overflow.mjs
+```
 
-- **Zero Remote Servers**: The extension contains no backend, tracking SDKs, or network telemetry.
-- **100% Local Storage**: All settings, learning items, and watch time statistics are stored exclusively in `chrome.storage.local` on the user's device.
-- **No Browsing History Collection**: We do not collect, monitor, or transmit user history.
-- **Data Export & Wipe**: Users can export a complete JSON backup or wipe all local data at any time from the extension dashboard.
-
----
-
-## Installation & Setup Instructions
-
-### Load Unpacked in Google Chrome
-
-1. Open Google Chrome.
-2. In the address bar, navigate to:
-   ```text
-   chrome://extensions
-   ```
-3. Enable **Developer mode** using the toggle in the upper-right corner.
-4. Click the **Load unpacked** button in the top toolbar.
-5. Select the project directory:
-   ```text
-   /Users/manassurvyawanshi/Downloads/VC Projects/Youtube-focus
-   ```
-6. The extension **YouTube Focus — Intentional Learning & Video Player** will appear in your installed extensions list with no errors.
-7. Click the Chrome Extensions puzzle icon in your browser toolbar and pin **YouTube Focus** for quick access.
-
-### Reloading After Edits
-- When modifying `src/content/`, `src/popup/`, or `src/dashboard/`, simply reload the YouTube webpage or reopen the popup.
-- When modifying `manifest.json` or `src/background/service-worker.js`, click the **Reload** (circular arrow) icon on the extension card in `chrome://extensions`.
-
-### Debugging
-- **Background Worker**: In `chrome://extensions`, click **service worker** on the extension card to open DevTools for the background script.
-- **Content Scripts**: On any YouTube page, right-click and choose **Inspect**. Open the **Console** tab and filter by `[YouTube Focus]`.
-- **Debug Mode**: You can enable verbose logging by setting `debugMode: true` in settings or calling `window.YTF_LOGGER.setDebug(true)` in the page console.
+For manual step-by-step verification procedures, refer to [TESTING.md](file:///Users/manassurvyawanshi/Downloads/VC%20Projects/Youtube-focus/TESTING.md).
 
 ---
 
-## Known Limitations (Phase 1)
+## Packaging for Distribution
 
-1. **YouTube Dynamic Class Obfuscation**: YouTube occasionally tests new polymer web component layouts. The extension uses resilient attribute selectors (`page-subtype="home"`, `#movie_player`, `.ytp-right-controls`), but changes to YouTube's internal player structure require centralized selector updates in `src/shared/constants.js`.
-2. **Native Fullscreen vs Window Fullscreen**: If native OS fullscreen (`F` key) is pressed while Window Fullscreen is active, the browser will enter OS fullscreen. Pressing `Escape` or `W` cleanly exits back to the normal view.
-3. **Embedded Players**: Window Fullscreen is designed for `youtube.com/watch` pages and does not run on third-party websites embedding YouTube `<iframe>` players.
+To create a clean production ZIP package for deployment or manual installation:
+
+```bash
+# From repository root:
+zip -r watchflow-v1.0.0.zip manifest.json src/
+```
+
+*Note: Ensure `manifest.json` is located at the root of the ZIP file.*
 
 ---
 
-## Chrome Web Store Release Checklist
+## Version
 
-- [x] Manifest V3 compliant (`manifest_version: 3`).
-- [x] No `eval()`, `new Function()`, or remotely hosted code.
-- [x] High-resolution icons provided in 16x16, 32x32, 48x48, and 128x128 formats.
-- [x] Minimum permissions requested with clear justification.
-- [x] Single-purpose description aligned with Chrome Web Store policies.
-- [x] Complete privacy declaration (Local-only, no user tracking).
-- [x] No deprecated Manifest V2 APIs or long-running background timers.
-- [x] Manual QA test suite documented in `TESTING.md`.
+**v1.0.0** — Production Release

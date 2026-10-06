@@ -1,5 +1,5 @@
 /**
- * YouTube Focus - Shared Constants & Selectors
+ * WatchFlow - Shared Constants & Selectors
  * Works in Content Scripts, Background Workers, and Popup Pages.
  */
 
@@ -9,6 +9,7 @@
   const ACTIONS = {
     PING: 'PING',
     GET_STATUS: 'GET_STATUS',
+    TOGGLE_EXTENSION: 'TOGGLE_EXTENSION',
     TOGGLE_FULLSCREEN: 'TOGGLE_FULLSCREEN',
     TOGGLE_FOCUS: 'TOGGLE_FOCUS',
     ADD_TO_QUEUE: 'ADD_TO_QUEUE',
@@ -18,11 +19,14 @@
     TOGGLE_WINDOW_FULLSCREEN: 'TOGGLE_FULLSCREEN',
     TOGGLE_FOCUS_MODE: 'TOGGLE_FOCUS',
     GET_CURRENT_VIDEO_INFO: 'GET_CURRENT_VIDEO_INFO',
+    GET_PLAYLIST_CONTEXT: 'GET_PLAYLIST_CONTEXT',
     ADD_CURRENT_TO_QUEUE: 'ADD_TO_QUEUE',
     SETTINGS_CHANGED: 'SETTINGS_CHANGED',
     CHECK_LIMITS: 'CHECK_LIMITS',
     TRIGGER_COOLDOWN: 'TRIGGER_COOLDOWN',
-    DISMISS_COOLDOWN: 'DISMISS_COOLDOWN'
+    DISMISS_COOLDOWN: 'DISMISS_COOLDOWN',
+    OPEN_DASHBOARD: 'OPEN_DASHBOARD',
+    OPEN_LEARNING_QUEUE: 'OPEN_LEARNING_QUEUE'
   };
 
   const STORAGE_KEYS = {
@@ -35,14 +39,17 @@
   };
 
   const DEFAULT_SETTINGS = {
+    // Master Extension state
+    extensionEnabled: true,
+
     // Focus Mode features
     focusModeEnabled: true,
     hideHomeFeed: true,
     hideShorts: true,
+    blockShorts: true,
     hideRecommendations: true,
     hideComments: false,
     hideEndScreens: true,
-    redirectShortsToWatch: true,
 
     // Window Fullscreen
     windowFullscreenEnabled: false,
@@ -129,6 +136,9 @@
     COURSE_BANNER: 'yt-focus-course-banner',
     QUICK_ADD_BTN: 'yt-focus-quick-add-btn',
     QUICK_ADD_PLAYLIST_BTN: 'yt-focus-quick-playlist-btn',
+    SHORTS_BLOCK_OVERLAY: 'yt-focus-shorts-block-overlay',
+    VIDEO_BLOCK_OVERLAY: 'yt-focus-video-block-overlay',
+    SEARCH_BLOCK_OVERLAY: 'yt-focus-search-block-overlay',
     TOAST_CONTAINER: 'yt-focus-toast-container',
     TOAST: 'yt-focus-toast',
   };
@@ -139,6 +149,20 @@
     EXIT_FULLSCREEN: 'Escape',
   };
 
+  function formatTime12(timeStr) {
+    if (!timeStr) return '';
+    const parts = timeStr.split(':');
+    if (parts.length < 2) return timeStr;
+    let hours = parseInt(parts[0], 10);
+    const minutes = parseInt(parts[1], 10);
+    if (isNaN(hours) || isNaN(minutes)) return timeStr;
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    const minsFormatted = minutes < 10 ? `0${minutes}` : `${minutes}`;
+    return `${hours}:${minsFormatted} ${ampm}`;
+  }
+
   const YTF_CONSTANTS = {
     ACTIONS,
     STORAGE_KEYS,
@@ -146,6 +170,7 @@
     SELECTORS,
     CSS_CLASSES,
     SHORTCUTS,
+    formatTime12,
   };
 
   root.YTF_CONSTANTS = YTF_CONSTANTS;
@@ -154,3 +179,4 @@
     module.exports = YTF_CONSTANTS;
   }
 })(typeof self !== 'undefined' ? self : this);
+

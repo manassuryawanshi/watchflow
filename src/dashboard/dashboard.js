@@ -1,7 +1,8 @@
 /**
- * YouTube Focus - Dashboard Application Logic
+ * WatchFlow - Dashboard Application Logic
  * Coordinates Navigation, Learning Queue (Videos & Playlists), Analytics Charts,
  * Focus Mode Controls, Limits, Cooldown, Schedules, and Local Data Management.
+ * Follows YouTube & YouTube Studio Visual Architecture.
  */
 
 (function () {
@@ -13,6 +14,58 @@
   let currentSettings = Object.assign({}, DEFAULT_SETTINGS);
   let currentFilter = 'all';
   let currentAnalyticsRange = '7d';
+
+  // UI-Level Expanded Playlist State (keyed by stable playlist identifier)
+  const SESSION_STORAGE_EXPANDED_KEY = 'wf_expanded_playlists';
+  const expandedPlaylistIds = new Set();
+
+  function loadExpandedStateFromSession() {
+    try {
+      const stored = sessionStorage.getItem(SESSION_STORAGE_EXPANDED_KEY);
+      if (stored) {
+        const arr = JSON.parse(stored);
+        if (Array.isArray(arr)) {
+          arr.forEach(id => {
+            if (id) expandedPlaylistIds.add(String(id));
+          });
+        }
+      }
+    } catch (e) {}
+  }
+
+  function saveExpandedStateToSession() {
+    try {
+      sessionStorage.setItem(SESSION_STORAGE_EXPANDED_KEY, JSON.stringify(Array.from(expandedPlaylistIds)));
+    } catch (e) {}
+  }
+
+  function getPlaylistKey(item) {
+    if (!item) return '';
+    if (typeof item === 'string') {
+      return item.startsWith('pl_') ? item.substring(3) : item;
+    }
+    if (item.playlistId) return String(item.playlistId);
+    if (typeof item.id === 'string') {
+      return item.id.startsWith('pl_') ? item.id.substring(3) : item.id;
+    }
+    return '';
+  }
+
+  function isPlaylistExpanded(item) {
+    const key = getPlaylistKey(item);
+    return key ? expandedPlaylistIds.has(key) : false;
+  }
+
+  function setPlaylistExpanded(item, expanded) {
+    const key = getPlaylistKey(item);
+    if (!key) return;
+    if (expanded) {
+      expandedPlaylistIds.add(key);
+    } else {
+      expandedPlaylistIds.delete(key);
+    }
+    saveExpandedStateToSession();
+  }
 
   // Navigation
   const navItems = document.querySelectorAll('.nav-item');
@@ -28,12 +81,20 @@
   const ovQueueCount = document.getElementById('ov-queue-count');
   const ovQueueSub = document.getElementById('ov-queue-sub');
   const ovFocusStatus = document.getElementById('ov-focus-status');
-  const spotlightCard = document.getElementById('spotlight-card');
+
+  // Spotlight Media Card (Continue Learning)
+  const spotlightThumbWrap = document.getElementById('spotlight-thumb-wrap');
+  const spotlightThumb = document.getElementById('spotlight-thumb');
+  const spotlightDuration = document.getElementById('spotlight-duration');
   const spotlightTitle = document.getElementById('spotlight-title');
   const spotlightMeta = document.getElementById('spotlight-meta');
   const spotlightTypeBadge = document.getElementById('spotlight-type-badge');
+  const spotlightProgressWrap = document.getElementById('spotlight-progress-wrap');
+  const spotlightBar = document.getElementById('spotlight-bar');
+  const spotlightProgressText = document.getElementById('spotlight-progress-text');
   const spotlightActionBtn = document.getElementById('spotlight-action-btn');
-  const heroBtnContinue = document.getElementById('hero-btn-continue');
+
+  // Recent Activity
   const recentActivityList = document.getElementById('recent-activity-list');
 
   // Learning Queue Elements
@@ -46,7 +107,7 @@
   const queueIntelPct = document.getElementById('queue-intel-pct');
   const queueIntelBar = document.getElementById('queue-intel-bar');
   const learningQueueList = document.getElementById('learning-queue-list');
-  const filterTabs = document.querySelectorAll('.filter-tab[data-filter]');
+  const filterChips = document.querySelectorAll('.chip[data-filter]');
 
   // Modals: Add Video & Add Playlist
   const btnShowAddVideo = document.getElementById('btn-show-add-video');
@@ -77,9 +138,10 @@
   const anAvgSession = document.getElementById('an-avg-session');
   const anLongestSession = document.getElementById('an-longest-session');
   const analyticsBarChart = document.getElementById('analytics-bar-chart');
-  const rangeTabs = document.querySelectorAll('.filter-tab[data-range]');
+  const rangeChips = document.querySelectorAll('.chip[data-range]');
 
-  // Focus Toggles
+  // Master Extension & Focus Toggles
+  const dashMasterExtension = document.getElementById('dash-master-extension');
   const dashFocusMode = document.getElementById('dash-focus-mode');
   const dashHideHome = document.getElementById('dash-hide-home');
   const dashHideShorts = document.getElementById('dash-hide-shorts');
@@ -108,6 +170,7 @@
   const inputSchStart = document.getElementById('input-sch-start');
   const inputSchEnd = document.getElementById('input-sch-end');
   const selectSchMode = document.getElementById('select-sch-mode');
+  const schTimePreview = document.getElementById('sch-time-preview');
 
   // Preferences & Data
   const dashCourseMode = document.getElementById('dash-course-mode');
@@ -128,6 +191,23 @@
     return formatMins(mins);
   }
 
+  function formatTime12(timeStr) {
+    if (window.YTF_CONSTANTS && typeof window.YTF_CONSTANTS.formatTime12 === 'function') {
+      return window.YTF_CONSTANTS.formatTime12(timeStr);
+    }
+    if (!timeStr) return '';
+    const parts = timeStr.split(':');
+    if (parts.length < 2) return timeStr;
+    let hours = parseInt(parts[0], 10);
+    const minutes = parseInt(parts[1], 10);
+    if (isNaN(hours) || isNaN(minutes)) return timeStr;
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    const minsFormatted = minutes < 10 ? `0${minutes}` : `${minutes}`;
+    return `${hours}:${minsFormatted} ${ampm}`;
+  }
+
   function showDashToast(message, icon = '✓') {
     const existing = document.querySelector('.dash-toast');
     if (existing) existing.remove();
@@ -144,45 +224,71 @@
   }
 
   async function init() {
+    loadExpandedStateFromSession();
     setupNavigation();
     setupModals();
     setupEventListeners();
     await loadAllData();
+    handleInitialNavigation();
+  }
+
+  function navigateToSection(target) {
+    const normalized = (target === 'learning-queue' || target === 'learning') ? 'learning' : target;
+    navItems.forEach(n => {
+      n.classList.toggle('active', n.getAttribute('data-section') === normalized);
+    });
+    sections.forEach(s => {
+      s.classList.toggle('active', s.id === `section-${normalized}`);
+    });
+
+    if (normalized === 'analytics') {
+      loadAnalytics(currentAnalyticsRange);
+    }
+  }
+
+  function handleInitialNavigation() {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const sectionParam = urlParams.get('section');
+      const hash = window.location.hash.replace('#', '');
+      const target = sectionParam || hash;
+      if (target) {
+        navigateToSection(target);
+      }
+    } catch (e) {
+      const hash = window.location.hash.replace('#', '');
+      if (hash) navigateToSection(hash);
+    }
   }
 
   function setupNavigation() {
     navItems.forEach(item => {
       item.addEventListener('click', () => {
         const target = item.getAttribute('data-section');
-        navItems.forEach(n => n.classList.remove('active'));
-        sections.forEach(s => s.classList.remove('active'));
-
-        item.classList.add('active');
-        const activeSection = document.getElementById(`section-${target}`);
-        if (activeSection) {
-          activeSection.classList.add('active');
-          if (target === 'analytics') {
-            loadAnalytics(currentAnalyticsRange);
-          }
-        }
+        window.location.hash = target;
+        navigateToSection(target);
       });
     });
 
-    filterTabs.forEach(tab => {
-      tab.addEventListener('click', async () => {
-        filterTabs.forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        currentFilter = tab.getAttribute('data-filter');
+    window.addEventListener('hashchange', () => {
+      handleInitialNavigation();
+    });
+
+    filterChips.forEach(chip => {
+      chip.addEventListener('click', async () => {
+        filterChips.forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        currentFilter = chip.getAttribute('data-filter');
         const queue = await storage.getLearningQueue();
         renderLearningQueue(queue);
       });
     });
 
-    rangeTabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        rangeTabs.forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        currentAnalyticsRange = tab.getAttribute('data-range');
+    rangeChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        rangeChips.forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        currentAnalyticsRange = chip.getAttribute('data-range');
         loadAnalytics(currentAnalyticsRange);
       });
     });
@@ -220,13 +326,18 @@
 
     // 1. Overview Tab
     const todayMins = Math.round((today?.watchTimeSeconds || 0) / 60);
-    const limitMins = currentSettings.dailyLimitMinutes || 60;
+    const limitMins = typeof currentSettings.dailyLimitMinutes === 'number' ? currentSettings.dailyLimitMinutes : 60;
     const focusMins = Math.round((today?.focusTimeSeconds || 0) / 60);
     const focusPctVal = todayMins > 0 ? Math.min(100, Math.round((focusMins / todayMins) * 100)) : 0;
 
     ovWatchTime.textContent = formatMins(todayMins);
-    ovWatchSub.textContent = `Limit: ${limitMins}m`;
-    ovWatchBar.style.width = `${Math.min(100, Math.round((todayMins / limitMins) * 100))}%`;
+    if (limitMins === 0) {
+      ovWatchSub.textContent = 'Daily Limit: No Limit';
+      ovWatchBar.style.width = '0%';
+    } else {
+      ovWatchSub.textContent = `Limit: ${limitMins}m`;
+      ovWatchBar.style.width = `${Math.min(100, Math.round((todayMins / limitMins) * 100))}%`;
+    }
 
     ovFocusTime.textContent = formatMins(focusMins);
     ovFocusPct.textContent = `${focusPctVal}% of today's time`;
@@ -236,25 +347,51 @@
     navQueueCount.textContent = intel.remainingVideos;
 
     ovFocusStatus.textContent = currentSettings.focusModeEnabled ? 'Active' : 'Paused';
-    ovFocusStatus.className = currentSettings.focusModeEnabled ? 'kpi-val text-emerald' : 'kpi-val text-muted';
+    ovFocusStatus.className = currentSettings.focusModeEnabled ? 'kpi-val text-red' : 'kpi-val text-muted';
 
-    // Spotlight & Hero Continue
+    // 2. Spotlight Card (Continue Learning)
     if (intel.nextItem) {
+      const isPlaylist = intel.nextItem.type === 'playlist';
       spotlightTitle.textContent = intel.nextItem.title;
-      spotlightMeta.textContent = `${intel.nextItem.channel} • ${intel.nextItem.progress} completed`;
-      spotlightTypeBadge.textContent = intel.nextItem.type === 'playlist' ? 'Course in Progress' : 'Next Video';
+      spotlightTypeBadge.textContent = isPlaylist ? 'Course in Progress' : 'Next Video';
+
+      if (intel.nextItem.thumbnail) {
+        spotlightThumb.src = intel.nextItem.thumbnail;
+        spotlightThumbWrap.style.display = 'block';
+      } else {
+        spotlightThumbWrap.style.display = 'none';
+      }
+
+      if (isPlaylist) {
+        spotlightMeta.textContent = `${intel.nextItem.playlistTitle || intel.nextItem.channel || 'YouTube'} • Lesson ${intel.nextItem.lessonNumber} of ${intel.nextItem.totalLessons}`;
+        spotlightDuration.textContent = intel.nextItem.duration || `${intel.nextItem.totalLessons} lessons`;
+
+        const compCount = Math.max(0, (intel.nextItem.lessonNumber || 1) - 1);
+        const totalCount = intel.nextItem.totalLessons || 1;
+        const plPct = Math.round((compCount / totalCount) * 100);
+
+        spotlightProgressWrap.style.display = 'flex';
+        spotlightBar.style.width = `${plPct}%`;
+        spotlightProgressText.textContent = `${compCount} / ${totalCount} lessons completed (${plPct}%)`;
+      } else {
+        spotlightMeta.textContent = `${intel.nextItem.channel || 'YouTube'} • ${intel.nextItem.duration || 'In Queue'}`;
+        spotlightDuration.textContent = intel.nextItem.duration || '';
+        spotlightProgressWrap.style.display = 'none';
+      }
+
       spotlightActionBtn.href = intel.nextItem.url;
-      heroBtnContinue.style.display = 'inline-flex';
-      heroBtnContinue.onclick = () => window.open(intel.nextItem.url, '_blank');
+      spotlightActionBtn.querySelector('span').textContent = 'Continue →';
     } else {
+      spotlightThumbWrap.style.display = 'none';
       spotlightTitle.textContent = 'Learning Queue is empty';
-      spotlightMeta.textContent = 'Add videos or entire playlists from YouTube or the Learning Queue tab.';
+      spotlightMeta.textContent = 'Add videos or entire playlists from YouTube to track your intentional learning progress.';
       spotlightTypeBadge.textContent = 'Queue Empty';
+      spotlightProgressWrap.style.display = 'none';
       spotlightActionBtn.href = 'https://www.youtube.com';
       spotlightActionBtn.querySelector('span').textContent = 'Browse YouTube';
     }
 
-    // 2. Learning Queue Tab Intelligence
+    // 3. Learning Queue Tab Intelligence
     queueIntelVideos.textContent = intel.totalVideos;
     queueIntelRemaining.textContent = `${intel.remainingVideos} remaining`;
     queueIntelPlaylists.textContent = intel.playlistsCount;
@@ -266,7 +403,7 @@
 
     renderLearningQueue(queue);
 
-    // 3. Focus Settings
+    // 4. Focus Settings
     dashFocusMode.checked = !!currentSettings.focusModeEnabled;
     dashHideHome.checked = !!currentSettings.hideHomeFeed;
     dashHideShorts.checked = !!currentSettings.hideShorts;
@@ -274,32 +411,57 @@
     dashHideEndscreens.checked = !!currentSettings.hideEndScreens;
     dashHideComments.checked = !!currentSettings.hideComments;
 
-    // 4. Time & Limits
-    dashDailyLimit.value = currentSettings.dailyLimitMinutes || 60;
+    // 5. Time & Limits
+    dashDailyLimit.value = limitMins === 0 ? 0 : limitMins;
     dashWarningLimit.value = currentSettings.dailyWarningMinutes || 45;
     dashCooldownMins.value = currentSettings.cooldownMinutes || 10;
 
     limitPresetBtns.forEach(btn => {
       const val = parseInt(btn.getAttribute('data-limit'), 10);
-      btn.classList.toggle('active', val === currentSettings.dailyLimitMinutes);
+      btn.classList.toggle('active', val === limitMins);
     });
+
+    if (dashMasterExtension) {
+      dashMasterExtension.checked = currentSettings.extensionEnabled !== false;
+    }
 
     const isHard = currentSettings.limitMode === 'hard';
     btnModeSoft.classList.toggle('active', !isHard);
     btnModeHard.classList.toggle('active', isHard);
 
-    // 5. Schedules
+    // 6. Schedules
     dashScheduleMaster.checked = !!currentSettings.scheduleEnabled;
     await loadSchedules();
 
-    // 6. Preferences
+    // 7. Preferences
     dashCourseMode.checked = currentSettings.courseModeEnabled !== false;
 
-    // 7. Recent Activity & Analytics
+    // 8. Recent Activity
     await loadRecentActivity();
   }
 
+  function getScrollPosition() {
+    const sc = document.querySelector('.main-content');
+    if (sc && sc.scrollTop > 0) {
+      return { container: sc, top: sc.scrollTop };
+    }
+    const winTop = window.scrollY || document.documentElement.scrollTop || (document.body ? document.body.scrollTop : 0) || 0;
+    return { container: window, top: winTop };
+  }
+
+  function restoreScrollPosition(saved) {
+    if (!saved || typeof saved.top !== 'number') return;
+    if (saved.container && saved.container !== window) {
+      saved.container.scrollTop = saved.top;
+    }
+    if (saved.top > 0) {
+      window.scrollTo(0, saved.top);
+    }
+  }
+
   function renderLearningQueue(queue) {
+    const savedScroll = getScrollPosition();
+
     learningQueueList.innerHTML = '';
 
     let filtered = queue;
@@ -309,12 +471,15 @@
       filtered = queue.filter(q => q.type === 'playlist');
     } else if (currentFilter === 'inprogress') {
       filtered = queue.filter(q => {
-        if (q.type === 'playlist') return q.completedCount < q.totalCount;
+        if (q.type === 'playlist') return (q.completedCount || 0) < (q.totalCount || (q.videos || []).length);
         return !q.completed;
       });
     } else if (currentFilter === 'completed') {
       filtered = queue.filter(q => {
-        if (q.type === 'playlist') return q.completedCount === q.totalCount && q.totalCount > 0;
+        if (q.type === 'playlist') {
+          const total = q.totalCount || (q.videos || []).length;
+          return total > 0 && (q.completedCount || 0) === total;
+        }
         return q.completed;
       });
     }
@@ -322,12 +487,14 @@
     if (filtered.length === 0) {
       learningQueueList.innerHTML = `
         <div class="empty-state">
-          <div class="empty-state-icon">📚</div>
+          <svg viewBox="0 0 24 24" width="48" height="48" fill="var(--ytf-text-muted)" style="margin-bottom: 12px;">
+            <path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12z"/>
+          </svg>
           <h3>Your learning queue is empty</h3>
           <p>Add individual videos or entire playlists from YouTube to track your intentional learning progress.</p>
-          <div style="display: flex; gap: 12px; justify-content: center;">
-            <button type="button" class="btn btn-secondary" id="empty-add-vid">Add Video</button>
-            <button type="button" class="btn btn-primary" id="empty-add-pl">Add Playlist</button>
+          <div style="display: flex; gap: 12px; justify-content: center; margin-top: 16px;">
+            <button type="button" class="btn btn-secondary" id="empty-add-vid">+ Add Video</button>
+            <button type="button" class="btn btn-primary" id="empty-add-pl">+ Add Playlist</button>
           </div>
         </div>
       `;
@@ -343,6 +510,8 @@
         renderVideoCard(item);
       }
     });
+
+    restoreScrollPosition(savedScroll);
   }
 
   function renderVideoCard(item) {
@@ -354,9 +523,17 @@
     card.innerHTML = `
       <div class="queue-card-main">
         <input type="checkbox" ${item.completed ? 'checked' : ''} class="item-complete-check" title="Toggle completed">
-        ${thumb ? `<img src="${thumb}" class="queue-card-thumb" alt="Thumbnail">` : ''}
+        ${thumb ? `
+          <div class="queue-thumb-wrap">
+            <img src="${thumb}" class="queue-card-thumb" alt="Thumbnail">
+            ${item.duration ? `<span class="thumb-duration">${item.duration}</span>` : ''}
+          </div>
+        ` : ''}
         <div class="queue-card-info">
-          <span class="queue-card-badge">Video</span>
+          <div class="queue-badge-row">
+            <span class="type-tag">Video</span>
+            ${item.completed ? '<span class="badge badge-red">Completed</span>' : ''}
+          </div>
           <a href="${item.sourceUrl || item.url}" target="_blank" class="queue-card-title ${item.completed ? 'completed' : ''}">${escapeHtml(item.title)}</a>
           <div class="queue-card-meta">
             <span>${escapeHtml(item.channelTitle || item.channel || 'YouTube')}</span>
@@ -389,41 +566,52 @@
   function renderPlaylistCard(item) {
     const card = document.createElement('div');
     card.className = 'queue-card';
+    const plKey = getPlaylistKey(item);
+    if (plKey) card.setAttribute('data-playlist-id', plKey);
 
-    const total = item.totalCount || item.videos.length || 0;
+    const total = item.totalCount || (item.videos || []).length || 0;
     const completed = item.completedCount || 0;
     const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
-    const thumb = item.thumbnail || (item.videos[0] ? item.videos[0].thumbnail : '');
+    const thumb = item.thumbnail || (item.videos && item.videos[0] ? item.videos[0].thumbnail : '');
+    const isExpanded = isPlaylistExpanded(item);
 
     card.innerHTML = `
       <div class="queue-card-main">
         <input type="checkbox" ${completed === total && total > 0 ? 'checked' : ''} class="item-complete-check" title="Toggle all completed">
-        ${thumb ? `<img src="${thumb}" class="queue-card-thumb" alt="Thumbnail">` : ''}
-        <div class="queue-card-info">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span class="queue-card-badge playlist">Playlist</span>
-            <span class="badge ${completed === total ? 'badge-emerald' : 'badge-blue'}">${completed} / ${total} completed</span>
+        ${thumb ? `
+          <div class="queue-thumb-wrap">
+            <img src="${thumb}" class="queue-card-thumb" alt="Thumbnail">
+            <div class="playlist-badge-overlay">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M4 10h12v2H4zm0-4h12v2H4zm0 8h8v2H4zm10 0v6l5-3z"/></svg>
+              <span>${total}</span>
+            </div>
           </div>
-          <a href="${item.sourceUrl}" target="_blank" class="queue-card-title ${completed === total ? 'completed' : ''}">${escapeHtml(item.title)}</a>
+        ` : ''}
+        <div class="queue-card-info">
+          <div class="queue-badge-row">
+            <span class="type-tag playlist">Playlist</span>
+            <span class="badge ${completed === total && total > 0 ? 'badge-red' : ''}">${completed} / ${total} completed</span>
+          </div>
+          <a href="${item.sourceUrl}" target="_blank" class="queue-card-title ${completed === total && total > 0 ? 'completed' : ''}">${escapeHtml(item.title)}</a>
           <div class="queue-card-meta">
             <span>${escapeHtml(item.channelTitle || 'YouTube')}</span>
             <span>• ${total} lessons</span>
             <span>• ${pct}% complete</span>
           </div>
-          <div class="progress-bar-container">
+          <div class="progress-bar-container" style="max-width: 260px; margin-top: 4px;">
             <div class="progress-bar-fill" style="width: ${pct}%;"></div>
           </div>
         </div>
         <div class="queue-card-actions">
-          <button type="button" class="btn btn-secondary btn-sm btn-expand-pl">
+          <button type="button" class="btn btn-secondary btn-sm btn-expand-pl ${isExpanded ? 'active' : ''}" aria-expanded="${isExpanded ? 'true' : 'false'}" aria-label="Toggle course curriculum">
             <span>Lessons</span>
-            <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
+            <svg class="expand-icon" viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M10 17l5-5-5-5v10z"/></svg>
           </button>
           <a href="${item.sourceUrl}" target="_blank" class="btn btn-primary btn-sm">Continue</a>
           <button type="button" class="btn btn-danger btn-sm btn-delete-item">Remove</button>
         </div>
       </div>
-      <div class="playlist-drawer" style="display: none;">
+      <div class="playlist-drawer" style="display: ${isExpanded ? 'block' : 'none'};">
         <div class="playlist-drawer-header">Course Curriculum (${total} lessons)</div>
         <div class="lessons-container">
           <!-- Lessons injected dynamically -->
@@ -440,6 +628,7 @@
     // Remove entire playlist
     card.querySelector('.btn-delete-item').addEventListener('click', async () => {
       await storage.removeFromLearningQueue(item.id);
+      setPlaylistExpanded(item, false);
       await loadAllData();
       showDashToast('Playlist removed from queue', '🗑️');
     });
@@ -449,12 +638,18 @@
     const lessonsContainer = card.querySelector('.lessons-container');
     const expandBtn = card.querySelector('.btn-expand-pl');
 
-    expandBtn.addEventListener('click', () => {
-      const isExpanded = drawer.style.display !== 'none';
-      drawer.style.display = isExpanded ? 'none' : 'block';
-      expandBtn.classList.toggle('active', !isExpanded);
+    if (isExpanded) {
+      renderPlaylistLessons(item, lessonsContainer);
+    }
 
-      if (!isExpanded && (!lessonsContainer.children.length)) {
+    expandBtn.addEventListener('click', () => {
+      const nowExpanded = drawer.style.display === 'none';
+      drawer.style.display = nowExpanded ? 'block' : 'none';
+      expandBtn.classList.toggle('active', nowExpanded);
+      expandBtn.setAttribute('aria-expanded', nowExpanded ? 'true' : 'false');
+      setPlaylistExpanded(item, nowExpanded);
+
+      if (nowExpanded && (!lessonsContainer.children.length)) {
         renderPlaylistLessons(item, lessonsContainer);
       }
     });
@@ -464,16 +659,29 @@
 
   function renderPlaylistLessons(playlistItem, container) {
     container.innerHTML = '';
-    (playlistItem.videos || []).forEach((vid, idx) => {
+    const vids = playlistItem.videos || [];
+
+    if (vids.length === 0) {
+      container.innerHTML = `
+        <div class="empty-lessons-state" style="padding: 12px 10px; text-align: center; color: var(--ytf-text-muted); font-size: 13px;">
+          No lessons remaining in this course curriculum.
+        </div>
+      `;
+      return;
+    }
+
+    vids.forEach((vid, idx) => {
       const row = document.createElement('div');
       row.className = 'lesson-row';
 
+      const numStr = String(idx + 1).padStart(2, '0');
+
       row.innerHTML = `
-        <input type="checkbox" ${vid.completed ? 'checked' : ''} class="lesson-check">
-        <span style="font-size: 11px; color: var(--text-muted); width: 24px;">#${idx + 1}</span>
+        <input type="checkbox" ${vid.completed ? 'checked' : ''} class="lesson-check" title="Toggle complete">
+        <span class="lesson-num">${numStr}</span>
         <a href="https://www.youtube.com/watch?v=${vid.videoId}&list=${playlistItem.playlistId}" target="_blank" class="lesson-title ${vid.completed ? 'completed' : ''}">${escapeHtml(vid.title)}</a>
         ${vid.duration ? `<span class="lesson-duration">${vid.duration}</span>` : ''}
-        <button type="button" class="btn btn-danger btn-sm" style="padding: 2px 6px; font-size: 10px;" title="Remove lesson">×</button>
+        <button type="button" class="btn btn-danger btn-sm btn-delete-lesson" style="padding: 2px 6px; font-size: 11px;" title="Remove lesson">×</button>
       `;
 
       // Checkbox toggle
@@ -483,7 +691,7 @@
       });
 
       // Remove single lesson
-      row.querySelector('button').addEventListener('click', async () => {
+      row.querySelector('.btn-delete-lesson').addEventListener('click', async () => {
         await storage.removeFromLearningQueue(playlistItem.id, vid.videoId);
         await loadAllData();
       });
@@ -512,7 +720,7 @@
 
     if (!daily || daily.length === 0 || daily.every(d => d.totalMins === 0)) {
       analyticsBarChart.innerHTML = `
-        <div style="width: 100%; text-align: center; color: var(--text-muted); padding: 40px 0;">
+        <div style="width: 100%; text-align: center; color: var(--ytf-text-muted); padding: 40px 0; font-size: 13px;">
           No watch-time recorded yet. Play a YouTube video to see real local analytics here.
         </div>
       `;
@@ -523,19 +731,19 @@
 
     daily.forEach(d => {
       const col = document.createElement('div');
-      col.className = 'chart-col';
+      col.className = 'chart-bar-group';
+      col.title = `${d.date}: ${d.totalMins}m total (${d.focusMins}m focused)`;
 
       const totalHeightPct = Math.min(100, Math.round((d.totalMins / maxMins) * 100));
       const focusHeightPct = d.totalMins > 0 ? Math.min(100, Math.round((d.focusMins / d.totalMins) * 100)) : 0;
 
       col.innerHTML = `
-        ${d.totalMins > 0 ? `<span class="bar-value">${d.totalMins}m</span>` : ''}
-        <div class="bar-wrapper" title="${d.date}: ${d.totalMins}m total (${d.focusMins}m focused)">
-          <div class="bar-total" style="height: ${totalHeightPct}%;">
-            <div class="bar-focused" style="height: ${focusHeightPct}%;"></div>
+        <div class="chart-bar-container">
+          <div class="chart-bar-fill" style="height: ${totalHeightPct}%;">
+            ${focusHeightPct > 0 ? `<div class="chart-bar-fill focus-highlight" style="height: ${focusHeightPct}%; position: absolute; bottom: 0; left: 0; width: 100%;"></div>` : ''}
           </div>
         </div>
-        <span class="bar-label">${d.label}</span>
+        <span class="chart-bar-label">${d.label}</span>
       `;
 
       analyticsBarChart.appendChild(col);
@@ -548,27 +756,34 @@
 
     if (!data.recentSessions || data.recentSessions.length === 0) {
       recentActivityList.innerHTML = `
-        <div style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 13px;">
-          No recent activity recorded yet.
+        <div style="padding: 24px; text-align: center; color: var(--ytf-text-muted); font-size: 13px;">
+          No recent activity recorded yet. Play a YouTube video to start tracking study sessions.
         </div>
       `;
       return;
     }
 
-    data.recentSessions.slice(0, 5).forEach(s => {
+    data.recentSessions.slice(0, 6).forEach(s => {
       const row = document.createElement('div');
-      row.className = 'lesson-row';
-      row.style.padding = '10px 0';
+      row.className = 'recent-media-row';
 
       const mins = Math.max(1, Math.round((s.durationSeconds || 0) / 60));
+      const thumb = s.videoId ? `https://i.ytimg.com/vi/${s.videoId}/hqdefault.jpg` : '';
 
       row.innerHTML = `
-        <span style="font-size: 16px;">⏱️</span>
-        <div style="flex: 1; min-width: 0;">
-          <a href="https://www.youtube.com/watch?v=${s.videoId}" target="_blank" class="lesson-title" style="font-weight: 500;">${escapeHtml(s.videoTitle || 'YouTube Video')}</a>
-          <div style="font-size: 11px; color: var(--text-muted);">${s.channelTitle || 'YouTube'} • ${s.date}</div>
+        <div class="recent-thumb-wrap">
+          ${thumb ? `<img src="${thumb}" class="recent-thumb" alt="Thumbnail">` : ''}
+          <span class="thumb-duration">${mins}m</span>
         </div>
-        <span class="badge ${s.inFocusMode ? 'badge-blue' : ''}">${mins}m</span>
+        <div class="recent-info">
+          <a href="https://www.youtube.com/watch?v=${s.videoId}" target="_blank" class="recent-title">${escapeHtml(s.videoTitle || 'YouTube Video')}</a>
+          <div class="recent-meta">
+            <span>${escapeHtml(s.channelTitle || 'YouTube')}</span>
+            <span>• ${s.date || 'Today'}</span>
+            ${s.inFocusMode ? '<span class="badge badge-red" style="padding: 1px 5px; font-size: 10px;">Focused</span>' : ''}
+          </div>
+        </div>
+        <a href="https://www.youtube.com/watch?v=${s.videoId}" target="_blank" class="btn btn-secondary btn-sm">Watch</a>
       `;
 
       recentActivityList.appendChild(row);
@@ -582,7 +797,9 @@
     if (schedules.length === 0) {
       schedulesList.innerHTML = `
         <div class="empty-state">
-          <div class="empty-state-icon">⏰</div>
+          <svg viewBox="0 0 24 24" width="48" height="48" fill="var(--ytf-text-muted)" style="margin-bottom: 12px;">
+            <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z"/>
+          </svg>
           <h3>No schedules created</h3>
           <p>Create scheduled windows to enforce Focus Mode or block YouTube during study or rest hours.</p>
         </div>
@@ -607,10 +824,10 @@
           <div class="queue-card-info">
             <div style="display: flex; align-items: center; gap: 8px;">
               <span class="queue-card-title">${escapeHtml(sch.name)}</span>
-              <span class="badge ${isBlock ? 'badge-red' : 'badge-blue'}">${isBlock ? 'Block YouTube' : 'Focus Mode'}</span>
+              <span class="badge ${isBlock ? 'badge-red' : ''}">${isBlock ? 'Block YouTube' : 'Focus Mode'}</span>
             </div>
             <div class="queue-card-meta">
-              <span>⏰ ${sch.startTime} – ${sch.endTime}</span>
+              <span>⏰ ${formatTime12(sch.startTime)} – ${formatTime12(sch.endTime)}</span>
               <span>• ${(sch.days || []).map(d => dayLabels[d]).join(', ')}</span>
             </div>
           </div>
@@ -714,6 +931,7 @@
 
     // Auto-save setting toggles
     const focusToggles = [
+      { el: dashMasterExtension, key: 'extensionEnabled' },
       { el: dashFocusMode, key: 'focusModeEnabled' },
       { el: dashHideHome, key: 'hideHomeFeed' },
       { el: dashHideShorts, key: 'hideShorts' },
@@ -729,7 +947,7 @@
         const update = { [key]: el.checked };
         currentSettings = await storage.saveSettings(update);
         ovFocusStatus.textContent = currentSettings.focusModeEnabled ? 'Active' : 'Paused';
-        ovFocusStatus.className = currentSettings.focusModeEnabled ? 'kpi-val text-emerald' : 'kpi-val text-muted';
+        ovFocusStatus.className = currentSettings.focusModeEnabled ? 'kpi-val text-red' : 'kpi-val text-muted';
 
         chrome.runtime.sendMessage({
           action: ACTIONS.SETTINGS_CHANGED,
@@ -740,7 +958,7 @@
       });
     });
 
-    // Daily Limit Presets
+    // Daily Limit Presets (Section 15: Support No Limit)
     limitPresetBtns.forEach(btn => {
       btn.addEventListener('click', async () => {
         limitPresetBtns.forEach(b => b.classList.remove('active'));
@@ -749,18 +967,30 @@
         dashDailyLimit.value = limitVal;
         await storage.saveSettings({ dailyLimitMinutes: limitVal });
         await loadAllData();
-        showDashToast(`Daily limit set to ${limitVal} minutes`, '⏱️');
+        showDashToast(limitVal === 0 ? 'Daily limit set to No Limit' : `Daily limit set to ${limitVal} minutes`, '⏱️');
       });
     });
 
     dashDailyLimit.addEventListener('change', async () => {
       const val = parseInt(dashDailyLimit.value, 10);
-      if (val > 0) {
+      if (!isNaN(val) && val >= 0) {
         await storage.saveSettings({ dailyLimitMinutes: val });
         await loadAllData();
-        showDashToast(`Daily limit set to ${val} minutes`, '⏱️');
+        showDashToast(val === 0 ? 'Daily limit set to No Limit' : `Daily limit set to ${val} minutes`, '⏱️');
       }
     });
+
+    // 12-Hour Schedule Time Preview
+    function updateSchPreview() {
+      if (schTimePreview && inputSchStart && inputSchEnd) {
+        schTimePreview.textContent = `Scheduled: ${formatTime12(inputSchStart.value)} – ${formatTime12(inputSchEnd.value)}`;
+      }
+    }
+    if (inputSchStart && inputSchEnd) {
+      inputSchStart.addEventListener('input', updateSchPreview);
+      inputSchEnd.addEventListener('input', updateSchPreview);
+      updateSchPreview();
+    }
 
     // Soft vs Hard Limit
     btnModeSoft.addEventListener('click', async () => {
@@ -843,6 +1073,8 @@
     btnClearQueue.addEventListener('click', async () => {
       if (confirm('Are you sure you want to clear your entire Learning Queue?')) {
         await storage.clearLearningQueue();
+        expandedPlaylistIds.clear();
+        saveExpandedStateToSession();
         await loadAllData();
         showDashToast('Learning Queue cleared', '🗑️');
       }
@@ -852,10 +1084,23 @@
     btnResetAll.addEventListener('click', async () => {
       if (confirm('WARNING: This will permanently wipe ALL local data (queue, history, analytics, settings) and restore factory defaults. Continue?')) {
         await storage.resetAllData();
+        expandedPlaylistIds.clear();
+        saveExpandedStateToSession();
         await loadAllData();
         showDashToast('All extension data reset to defaults', '🔄');
       }
     });
+
+    // Multi-context sync: when queue or daily stats change in other tabs
+    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.onChanged) {
+      chrome.storage.onChanged.addListener((changes, area) => {
+        if (area === 'local') {
+          if (changes['yt_focus_learning_queue'] || changes['yt_focus_daily_stats']) {
+            loadAllData();
+          }
+        }
+      });
+    }
   }
 
   function escapeHtml(str) {
@@ -868,5 +1113,8 @@
       .replace(/'/g, '&#039;');
   }
 
+  window.loadAllData = loadAllData;
+  window.getExpandedPlaylistIds = () => Array.from(expandedPlaylistIds);
+  window.isPlaylistExpanded = isPlaylistExpanded;
   init();
 })();

@@ -1,5 +1,5 @@
 /**
- * YouTube Focus - Universal Storage Service
+ * WatchFlow - Universal Storage Service
  * Wraps chrome.storage.local with defaults, error handling, and clean helpers.
  * Handles Settings, Learning Queue (Videos & Playlists), Watch-Time Sessions, Analytics, Cooldown & Schedules.
  */
@@ -47,7 +47,7 @@
         const result = await chrome.storage.local.get(key);
         return Object.assign({}, defaults, result[key] || {});
       } catch (err) {
-        console.error('[YouTube Focus] Error fetching settings:', err);
+        console.error('[WatchFlow] Error fetching settings:', err);
         return Object.assign({}, DEFAULT_SETTINGS || {});
       }
     },
@@ -63,7 +63,7 @@
         await chrome.storage.local.set({ [key]: updated });
         return updated;
       } catch (err) {
-        console.error('[YouTube Focus] Error saving settings:', err);
+        console.error('[WatchFlow] Error saving settings:', err);
         throw err;
       }
     },
@@ -77,7 +77,7 @@
         await chrome.storage.local.set({ [key]: DEFAULT_SETTINGS });
         return Object.assign({}, DEFAULT_SETTINGS);
       } catch (err) {
-        console.error('[YouTube Focus] Error resetting settings:', err);
+        console.error('[WatchFlow] Error resetting settings:', err);
         throw err;
       }
     },
@@ -95,13 +95,13 @@
         const result = await chrome.storage.local.get(key);
         return Array.isArray(result[key]) ? result[key] : [];
       } catch (err) {
-        console.error('[YouTube Focus] Error getting learning queue:', err);
+        console.error('[WatchFlow] Error getting learning queue:', err);
         return [];
       }
     },
 
     /**
-     * Check if a video or playlist is already in queue
+     * Check if a top-level video or playlist is already in queue
      */
     async isItemInQueue(identifier) {
       if (!identifier) return false;
@@ -109,11 +109,58 @@
       return queue.some(q => {
         if (q.id === identifier || q.videoId === identifier || q.playlistId === identifier) return true;
         if (q.sourceUrl && q.sourceUrl.includes(identifier)) return true;
-        if (q.type === 'playlist' && Array.isArray(q.videos)) {
-          return q.videos.some(v => v.videoId === identifier);
-        }
         return false;
       });
+    },
+
+    /**
+     * Check specifically if an individual video is in queue
+     */
+    async isVideoInQueue(videoId) {
+      if (!videoId) return false;
+      const queue = await this.getLearningQueue();
+      return queue.some(q => q.type === 'video' && (q.videoId === videoId || q.id === videoId));
+    },
+
+    /**
+     * Check specifically if an entire playlist is in queue
+     */
+    async isPlaylistInQueue(playlistId) {
+      if (!playlistId) return false;
+      const queue = await this.getLearningQueue();
+      return queue.some(q => q.type === 'playlist' && (q.playlistId === playlistId || q.id === playlistId || q.id === 'pl_' + playlistId));
+    },
+
+    /**
+     * Check if a video is a lesson in any queued playlist
+     */
+    async isLessonInQueuedPlaylist(videoId) {
+      if (!videoId) return false;
+      const queue = await this.getLearningQueue();
+      return queue.some(q => q.type === 'playlist' && Array.isArray(q.videos) && q.videos.some(v => v.videoId === videoId));
+    },
+
+    /**
+     * Authoritative Focus Mode permission check
+     * Allowed only if individual video is queued OR belongs to an explicitly queued playlist.
+     * YouTube Shorts are NEVER allowed.
+     */
+    async isVideoAllowed(videoId, context = {}) {
+      if (!videoId) return false;
+      if (context.isShort) return false;
+      const queue = await this.getLearningQueue();
+      if (queue.some(q => q.type === 'video' && (q.videoId === videoId || q.id === videoId))) {
+        return true;
+      }
+      if (queue.some(q => q.type === 'playlist' && Array.isArray(q.videos) && q.videos.some(v => v.videoId === videoId))) {
+        return true;
+      }
+      if (context.playlistId) {
+        if (queue.some(q => q.type === 'playlist' && (q.playlistId === context.playlistId || q.id === context.playlistId || q.id === 'pl_' + context.playlistId))) {
+          return true;
+        }
+      }
+      return false;
     },
 
     /**
@@ -125,7 +172,7 @@
         const queue = await this.getLearningQueue();
 
         const videoId = video.videoId || (video.sourceUrl ? this.extractVideoId(video.sourceUrl) : null) || 'vid_' + Date.now();
-        const existingIndex = queue.findIndex(q => q.videoId === videoId || (q.sourceUrl && video.sourceUrl && q.sourceUrl === video.sourceUrl));
+        const existingIndex = queue.findIndex(q => q.type === 'video' && (q.videoId === videoId || (q.sourceUrl && video.sourceUrl && q.sourceUrl === video.sourceUrl)));
 
         const newItem = {
           type: 'video',
@@ -138,8 +185,10 @@
           durationSeconds: video.durationSeconds || parseDurationToSeconds(video.duration),
           sourceUrl: video.sourceUrl || (videoId ? `https://www.youtube.com/watch?v=${videoId}` : ''),
           addedAt: Date.now(),
-          completed: false,
-          completedAt: null
+          completed: !!video.completed,
+          completedAt: video.completedAt || null,
+          lastPositionSeconds: typeof video.lastPositionSeconds === 'number' ? video.lastPositionSeconds : 0,
+          progressPct: typeof video.progressPct === 'number' ? video.progressPct : 0
         };
 
         if (existingIndex >= 0) {
@@ -151,7 +200,7 @@
         await chrome.storage.local.set({ [key]: queue });
         return { success: true, item: newItem, queue };
       } catch (err) {
-        console.error('[YouTube Focus] Error adding video to queue:', err);
+        console.error('[WatchFlow] Error adding video to queue:', err);
         throw err;
       }
     },
@@ -165,7 +214,7 @@
         const queue = await this.getLearningQueue();
 
         const playlistId = playlist.playlistId || 'pl_' + Date.now();
-        const existingIndex = queue.findIndex(q => q.playlistId === playlistId);
+        const existingIndex = queue.findIndex(q => q.type === 'playlist' && (q.playlistId === playlistId || q.id === playlistId));
 
         const cleanVideos = (playlist.videos || []).map((v, idx) => ({
           videoId: v.videoId || 'vid_' + idx,
@@ -178,6 +227,8 @@
         }));
 
         const completedCount = cleanVideos.filter(v => v.completed).length;
+        const nextIncompleteIdx = cleanVideos.findIndex(v => !v.completed);
+        const currentIndex = nextIncompleteIdx >= 0 ? nextIncompleteIdx : 0;
 
         const newPlaylistItem = {
           type: 'playlist',
@@ -189,7 +240,7 @@
           sourceUrl: playlist.sourceUrl || `https://www.youtube.com/playlist?list=${playlistId}`,
           addedAt: Date.now(),
           videos: cleanVideos,
-          currentIndex: playlist.currentIndex || 0,
+          currentIndex: currentIndex,
           completedCount: completedCount,
           totalCount: cleanVideos.length
         };
@@ -203,7 +254,7 @@
         await chrome.storage.local.set({ [key]: queue });
         return { success: true, item: newPlaylistItem, queue };
       } catch (err) {
-        console.error('[YouTube Focus] Error adding playlist to queue:', err);
+        console.error('[WatchFlow] Error adding playlist to queue:', err);
         throw err;
       }
     },
@@ -253,7 +304,7 @@
         await chrome.storage.local.set({ [key]: queue });
         return queue;
       } catch (err) {
-        console.error('[YouTube Focus] Error removing from queue:', err);
+        console.error('[WatchFlow] Error removing from queue:', err);
         throw err;
       }
     },
@@ -287,7 +338,9 @@
             });
           }
           item.completedCount = item.videos.filter(v => v.completed).length;
-          item.completed = item.completedCount === item.totalCount;
+          item.completed = item.completedCount === item.totalCount && item.totalCount > 0;
+          const nextIncomplete = item.videos.findIndex(v => !v.completed);
+          item.currentIndex = nextIncomplete >= 0 ? nextIncomplete : 0;
         } else {
           // Individual video
           item.completed = !item.completed;
@@ -297,7 +350,7 @@
         await chrome.storage.local.set({ [key]: queue });
         return queue;
       } catch (err) {
-        console.error('[YouTube Focus] Error toggling queue item:', err);
+        console.error('[WatchFlow] Error toggling queue item:', err);
         throw err;
       }
     },
@@ -325,7 +378,9 @@
               sub.completed = true;
               sub.completedAt = Date.now();
               item.completedCount = item.videos.filter(v => v.completed).length;
-              item.completed = item.completedCount === item.totalCount;
+              item.completed = item.completedCount === item.totalCount && item.totalCount > 0;
+              const nextIncomplete = item.videos.findIndex(v => !v.completed);
+              item.currentIndex = nextIncomplete >= 0 ? nextIncomplete : 0;
               matchedTitle = sub.title;
               changed = true;
             }
@@ -338,37 +393,165 @@
         }
         return null;
       } catch (err) {
-        console.error('[YouTube Focus] Error auto-completing video:', err);
+        console.error('[WatchFlow] Error auto-completing video:', err);
         return null;
       }
     },
 
     /**
      * Find next item to learn (for "Continue Learning" button)
+     * Priority:
+     * 1. Currently in-progress individual video
+     * 2. Currently in-progress lesson in a queued playlist
+     * 3. Next incomplete lesson in the active/in-progress playlist
+     * 4. Next incomplete individual queued video
+     * 5. First incomplete queue item
      */
     async getContinueLearningItem() {
       const queue = await this.getLearningQueue();
+      if (!queue || queue.length === 0) return null;
+
+      // Priority 1: Currently in-progress individual video
       for (const item of queue) {
-        if (item.type === 'video' && !item.completed) {
+        if (item.type === 'video' && !item.completed && ((item.lastPositionSeconds > 0) || (item.progressPct > 0))) {
           return {
+            id: item.id,
+            videoId: item.videoId,
             title: item.title,
-            channel: item.channelTitle,
-            url: item.sourceUrl,
+            channel: item.channelTitle || item.channel || 'YouTube',
+            url: item.sourceUrl || `https://www.youtube.com/watch?v=${item.videoId}`,
+            thumbnail: item.thumbnail || (item.videoId ? `https://i.ytimg.com/vi/${item.videoId}/hqdefault.jpg` : ''),
+            duration: item.duration || '',
             type: 'video',
-            progress: '0%'
-          };
-        }
-        if (item.type === 'playlist' && item.completedCount < item.totalCount) {
-          const nextSub = item.videos.find(v => !v.completed) || item.videos[0];
-          return {
-            title: `${item.title} — ${nextSub.title}`,
-            channel: item.channelTitle,
-            url: `https://www.youtube.com/watch?v=${nextSub.videoId}&list=${item.playlistId}`,
-            type: 'playlist',
-            progress: `${Math.round((item.completedCount / item.totalCount) * 100)}%`
+            progress: item.progress || `${item.progressPct || 0}%`,
+            progressPct: item.progressPct || 0
           };
         }
       }
+
+      // Priority 2: Currently in-progress lesson in a queued playlist
+      for (const item of queue) {
+        if (item.type === 'playlist' && Array.isArray(item.videos)) {
+          const inProgIdx = item.videos.findIndex(v => !v.completed && ((v.lastPositionSeconds > 0) || (v.progressPct > 0)));
+          if (inProgIdx >= 0) {
+            const sub = item.videos[inProgIdx];
+            const totalLessons = item.totalCount || item.videos.length;
+            const pct = totalLessons > 0 ? Math.round((item.completedCount / totalLessons) * 100) : 0;
+            return {
+              id: item.id,
+              playlistId: item.playlistId,
+              videoId: sub.videoId,
+              title: `${item.title} — ${sub.title}`,
+              playlistTitle: item.title,
+              lessonTitle: sub.title,
+              lessonNumber: inProgIdx + 1,
+              totalLessons: totalLessons,
+              completedCount: item.completedCount,
+              channel: item.channelTitle || 'YouTube',
+              url: `https://www.youtube.com/watch?v=${sub.videoId}&list=${item.playlistId}`,
+              thumbnail: sub.thumbnail || item.thumbnail || (sub.videoId ? `https://i.ytimg.com/vi/${sub.videoId}/hqdefault.jpg` : ''),
+              duration: sub.duration || '',
+              type: 'playlist',
+              progress: `${pct}%`,
+              progressPct: pct
+            };
+          }
+        }
+      }
+
+      // Priority 3: Next incomplete lesson in the active/in-progress playlist
+      for (const item of queue) {
+        if (item.type === 'playlist' && Array.isArray(item.videos) && item.completedCount > 0 && item.completedCount < (item.totalCount || item.videos.length)) {
+          const nextIdx = item.videos.findIndex(v => !v.completed);
+          if (nextIdx >= 0) {
+            const sub = item.videos[nextIdx];
+            const totalLessons = item.totalCount || item.videos.length;
+            const pct = totalLessons > 0 ? Math.round((item.completedCount / totalLessons) * 100) : 0;
+            return {
+              id: item.id,
+              playlistId: item.playlistId,
+              videoId: sub.videoId,
+              title: `${item.title} — ${sub.title}`,
+              playlistTitle: item.title,
+              lessonTitle: sub.title,
+              lessonNumber: nextIdx + 1,
+              totalLessons: totalLessons,
+              completedCount: item.completedCount,
+              channel: item.channelTitle || 'YouTube',
+              url: `https://www.youtube.com/watch?v=${sub.videoId}&list=${item.playlistId}`,
+              thumbnail: sub.thumbnail || item.thumbnail || (sub.videoId ? `https://i.ytimg.com/vi/${sub.videoId}/hqdefault.jpg` : ''),
+              duration: sub.duration || '',
+              type: 'playlist',
+              progress: `${pct}%`,
+              progressPct: pct
+            };
+          }
+        }
+      }
+
+      // Priority 4: Next incomplete individual queued video
+      for (const item of queue) {
+        if (item.type === 'video' && !item.completed) {
+          return {
+            id: item.id,
+            videoId: item.videoId,
+            title: item.title,
+            channel: item.channelTitle || item.channel || 'YouTube',
+            url: item.sourceUrl || `https://www.youtube.com/watch?v=${item.videoId}`,
+            thumbnail: item.thumbnail || (item.videoId ? `https://i.ytimg.com/vi/${item.videoId}/hqdefault.jpg` : ''),
+            duration: item.duration || '',
+            type: 'video',
+            progress: item.progress || '0%',
+            progressPct: 0
+          };
+        }
+      }
+
+      // Priority 5: First incomplete queue item (playlist or video)
+      for (const item of queue) {
+        if (item.type === 'video' && !item.completed) {
+          return {
+            id: item.id,
+            videoId: item.videoId,
+            title: item.title,
+            channel: item.channelTitle || item.channel || 'YouTube',
+            url: item.sourceUrl || `https://www.youtube.com/watch?v=${item.videoId}`,
+            thumbnail: item.thumbnail || (item.videoId ? `https://i.ytimg.com/vi/${item.videoId}/hqdefault.jpg` : ''),
+            duration: item.duration || '',
+            type: 'video',
+            progress: '0%',
+            progressPct: 0
+          };
+        }
+        if (item.type === 'playlist' && Array.isArray(item.videos) && item.completedCount < (item.totalCount || item.videos.length)) {
+          const nextIdx = item.videos.findIndex(v => !v.completed);
+          const idx = nextIdx >= 0 ? nextIdx : 0;
+          const sub = item.videos[idx] || item.videos[0];
+          if (sub) {
+            const totalLessons = item.totalCount || item.videos.length;
+            const pct = totalLessons > 0 ? Math.round((item.completedCount / totalLessons) * 100) : 0;
+            return {
+              id: item.id,
+              playlistId: item.playlistId,
+              videoId: sub.videoId,
+              title: `${item.title} — ${sub.title}`,
+              playlistTitle: item.title,
+              lessonTitle: sub.title,
+              lessonNumber: idx + 1,
+              totalLessons: totalLessons,
+              completedCount: item.completedCount,
+              channel: item.channelTitle || 'YouTube',
+              url: `https://www.youtube.com/watch?v=${sub.videoId}&list=${item.playlistId}`,
+              thumbnail: sub.thumbnail || item.thumbnail || (sub.videoId ? `https://i.ytimg.com/vi/${sub.videoId}/hqdefault.jpg` : ''),
+              duration: sub.duration || '',
+              type: 'playlist',
+              progress: `${pct}%`,
+              progressPct: pct
+            };
+          }
+        }
+      }
+
       return null;
     },
 
@@ -456,7 +639,7 @@
         }
         return { today: allStats[todayStr], all: allStats };
       } catch (err) {
-        console.error('[YouTube Focus] Error getting daily stats:', err);
+        console.error('[WatchFlow] Error getting daily stats:', err);
         return {
           today: { date: getTodayDateString(), watchTimeSeconds: 0, videosWatched: 0 },
           all: {}
@@ -500,7 +683,7 @@
 
         await chrome.storage.local.set({ [key]: allStats });
       } catch (err) {
-        console.error('[YouTube Focus] Error recording watch time:', err);
+        console.error('[WatchFlow] Error recording watch time:', err);
       }
     },
 
@@ -546,7 +729,7 @@
           await chrome.storage.local.set({ [statsKey]: allStats });
         }
       } catch (err) {
-        console.error('[YouTube Focus] Error recording session:', err);
+        console.error('[WatchFlow] Error recording session:', err);
       }
     },
 
@@ -634,7 +817,7 @@
           recentSessions: matchingSessions.slice(0, 10)
         };
       } catch (err) {
-        console.error('[YouTube Focus] Error compiling analytics:', err);
+        console.error('[WatchFlow] Error compiling analytics:', err);
         return {
           totalWatchTimeSeconds: 0,
           focusedTimeSeconds: 0,
@@ -695,7 +878,7 @@
         await chrome.storage.local.set({ [key]: state });
         return { active: true, reason, expiresAt, remainingSeconds: durationMinutes * 60 };
       } catch (err) {
-        console.error('[YouTube Focus] Error setting cooldown:', err);
+        console.error('[WatchFlow] Error setting cooldown:', err);
       }
     },
 
@@ -740,7 +923,7 @@
         await chrome.storage.local.set({ [key]: schedules });
         return schedules;
       } catch (err) {
-        console.error('[YouTube Focus] Error saving schedules:', err);
+        console.error('[WatchFlow] Error saving schedules:', err);
         throw err;
       }
     },
@@ -796,7 +979,7 @@
         await chrome.storage.local.remove([sessKey, statsKey]);
         return true;
       } catch (err) {
-        console.error('[YouTube Focus] Error clearing history:', err);
+        console.error('[WatchFlow] Error clearing history:', err);
         return false;
       }
     },
@@ -810,7 +993,7 @@
         await chrome.storage.local.remove(key);
         return true;
       } catch (err) {
-        console.error('[YouTube Focus] Error clearing queue:', err);
+        console.error('[WatchFlow] Error clearing queue:', err);
         return false;
       }
     },
@@ -824,7 +1007,7 @@
         await this.resetSettings();
         return true;
       } catch (err) {
-        console.error('[YouTube Focus] Error resetting all data:', err);
+        console.error('[WatchFlow] Error resetting all data:', err);
         return false;
       }
     },

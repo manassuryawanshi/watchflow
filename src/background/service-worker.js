@@ -1,5 +1,5 @@
 /**
- * YouTube Focus - Background Service Worker (Manifest V3)
+ * WatchFlow - Background Service Worker (Manifest V3)
  * Handles extension lifecycle, keyboard commands, and state coordination.
  */
 
@@ -81,8 +81,39 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
-  if (message.action === 'OPEN_DASHBOARD') {
-    chrome.runtime.openOptionsPage();
+  if (message.action === 'OPEN_DASHBOARD' || message.action === ACTIONS.OPEN_DASHBOARD) {
+    const section = message.section || '';
+    const dashUrl = section 
+      ? chrome.runtime.getURL(`src/dashboard/dashboard.html?section=${section}`)
+      : chrome.runtime.getURL('src/dashboard/dashboard.html');
+    chrome.tabs.query({}, (tabs) => {
+      const existing = tabs.find(t => t.url && t.url.includes('dashboard.html'));
+      if (existing && existing.id) {
+        chrome.tabs.update(existing.id, { active: true, url: dashUrl });
+        if (existing.windowId) {
+          chrome.windows.update(existing.windowId, { focused: true });
+        }
+      } else {
+        chrome.tabs.create({ url: dashUrl });
+      }
+    });
+    sendResponse({ success: true });
+    return true;
+  }
+
+  if (message.action === 'OPEN_LEARNING_QUEUE' || message.action === ACTIONS.OPEN_LEARNING_QUEUE) {
+    const queueUrl = chrome.runtime.getURL('src/dashboard/dashboard.html?section=learning-queue');
+    chrome.tabs.query({}, (tabs) => {
+      const existing = tabs.find(t => t.url && t.url.includes('dashboard.html'));
+      if (existing && existing.id) {
+        chrome.tabs.update(existing.id, { active: true, url: queueUrl });
+        if (existing.windowId) {
+          chrome.windows.update(existing.windowId, { focused: true });
+        }
+      } else {
+        chrome.tabs.create({ url: queueUrl });
+      }
+    });
     sendResponse({ success: true });
     return true;
   }

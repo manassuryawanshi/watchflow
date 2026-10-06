@@ -1,11 +1,11 @@
 /**
- * YouTube Focus - Universal Logger
+ * WatchFlow - Universal Logger
  */
 
 (function (root) {
   'use strict';
 
-  const PREFIX = '[YouTube Focus]';
+  const PREFIX = '[WatchFlow]';
 
   const logger = {
     debugEnabled: false,

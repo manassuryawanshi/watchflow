@@ -3,16 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>YouTube Focus</title>
+  <title>WatchFlow</title>
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-  <div class="popup-container">
+  <div class="popup-shell">
     <!-- Header -->
     <header class="popup-header">
       <div class="brand">
-        <img src="../icons/icon-32.png" alt="Logo" class="brand-logo" width="22" height="22">
-        <span class="brand-title">YouTube Focus</span>
+        <img src="../icons/icon-32.png" alt="WatchFlow Logo" class="brand-logo" width="18" height="18">
+        <span class="brand-title">WatchFlow</span>
       </div>
       <div id="tab-status" class="tab-status-pill status-offline">
         <span class="status-indicator-dot"></span>
@@ -20,138 +20,170 @@
       </div>
     </header>
 
-    <!-- Connection Alert (Shown when on YouTube tab but content script needs reload) -->
-    <div id="connection-alert" class="connection-alert hidden">
-      <div class="alert-icon">⚠️</div>
-      <div class="alert-content">
-        <div class="alert-title">Integration Unavailable</div>
-        <div class="alert-desc">Reload this tab to connect the updated extension.</div>
+    <!-- Extension Disabled View (Shown when Master Extension = OFF) -->
+    <div id="extension-disabled-view" class="disabled-view hidden">
+      <div class="disabled-icon-box">
+        <svg viewBox="0 0 24 24" width="36" height="36" fill="currentColor">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+        </svg>
       </div>
-      <button type="button" class="btn btn-warning btn-sm" id="btn-reload-youtube">Reload</button>
+      <div class="disabled-badge">Extension [ OFF ]</div>
+      <p class="disabled-msg">WatchFlow is currently disabled.</p>
+      <button type="button" class="btn btn-primary btn-turn-on" id="btn-enable-extension">Turn On</button>
+      <div class="disabled-footer">Local · Private · No Tracking</div>
     </div>
 
-    <!-- Today's Watch Time & Goal Card -->
-    <section class="metric-card">
-      <div class="metric-header">
-        <div class="metric-label">Today's Watch Time</div>
-        <div class="metric-goal-label">Limit: <span id="metric-goal-val">60m</span></div>
+    <!-- Extension Active Container (Shown when Master Extension = ON) -->
+    <div id="extension-active-view" class="active-view">
+      <!-- Connection Alert -->
+      <div id="connection-alert" class="connection-alert hidden">
+        <div class="alert-content">
+          <div class="alert-title">Tab Connection Needed</div>
+          <div class="alert-desc">Reload this YouTube tab to connect controls.</div>
+        </div>
+        <button type="button" class="btn btn-secondary btn-sm" id="btn-reload-youtube">Reload</button>
       </div>
-      <div class="metric-main">
-        <div class="metric-value" id="today-time-val">0m</div>
-        <div class="metric-session" id="current-session-label">Limit: <span id="limit-progress-val">0 / 60m</span></div>
-      </div>
-      <div class="progress-track">
-        <div class="progress-fill" id="goal-progress-bar" style="width: 0%;"></div>
-      </div>
-    </section>
 
-    <!-- Core Controls / Toggles -->
-    <section class="controls-section">
-      <!-- Window Fullscreen Toggle -->
-      <div class="control-row">
-        <div class="control-info">
-          <div class="control-title">
-            <span>Window Fullscreen</span>
+      <!-- Today's Watch Time -->
+      <section class="watch-time-section">
+        <div class="watch-time-header">
+          <span class="section-sub-label">Today's Watch Time</span>
+          <span class="watch-time-limit" id="metric-goal-label">Limit: <span id="metric-goal-val">60m</span></span>
+        </div>
+        <div class="watch-time-row">
+          <span class="watch-time-display" id="today-time-val">0m</span>
+          <span class="watch-time-ratio" id="limit-progress-val">0 / 60m</span>
+        </div>
+        <div class="progress-track" id="goal-progress-track">
+          <div class="progress-fill" id="goal-progress-bar" style="width: 0%;"></div>
+        </div>
+      </section>
+
+      <div class="divider"></div>
+
+      <!-- Core Controls -->
+      <section class="controls-section">
+        <!-- Master Extension Switch -->
+        <div class="control-row">
+          <div class="control-label-group">
+            <span class="control-title">Extension</span>
+          </div>
+          <label class="switch" for="toggle-master-extension" aria-label="Toggle Extension">
+            <input type="checkbox" id="toggle-master-extension" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <!-- Focus Mode Toggle -->
+        <div class="control-row">
+          <div class="control-label-group">
+            <span class="control-title">Focus Mode</span>
+          </div>
+          <label class="switch" for="toggle-focus-mode" aria-label="Toggle Focus Mode">
+            <input type="checkbox" id="toggle-focus-mode">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <!-- Window Fullscreen Toggle -->
+        <div class="control-row">
+          <div class="control-label-group">
+            <span class="control-title">Window Fullscreen</span>
             <span class="shortcut-tag">W</span>
           </div>
-          <div class="control-desc">Fills browser window without OS fullscreen</div>
+          <label class="switch" for="toggle-window-fullscreen" aria-label="Toggle Window Fullscreen">
+            <input type="checkbox" id="toggle-window-fullscreen">
+            <span class="slider"></span>
+          </label>
         </div>
-        <label class="switch" for="toggle-window-fullscreen" aria-label="Toggle Window Fullscreen">
-          <input type="checkbox" id="toggle-window-fullscreen">
-          <span class="slider"></span>
-        </label>
-      </div>
+      </section>
 
-      <!-- Focus Mode Toggle -->
-      <div class="control-row">
-        <div class="control-info">
-          <div class="control-title">
-            <span>Focus Mode</span>
-            <span class="status-tag" id="focus-status-tag">OFF</span>
+      <div class="divider"></div>
+
+      <!-- Current Video & Playlist Detection Section -->
+      <section class="current-media-section" id="current-media-section">
+        <div class="media-section-header">
+          <span class="section-heading">CURRENT VIDEO</span>
+        </div>
+        <div class="current-video-card" id="current-video-card">
+          <div class="media-thumb-box">
+            <img id="curr-vid-thumb" src="" alt="Thumbnail" class="media-thumb hidden">
+            <div id="curr-vid-thumb-fallback" class="thumb-fallback">▶</div>
           </div>
-          <div class="control-desc">Hide home feed, shorts & recommendations</div>
+          <div class="media-details">
+            <div class="media-title" id="curr-vid-title">No active video playing</div>
+            <div class="media-sub" id="curr-vid-meta">YouTube</div>
+          </div>
         </div>
-        <label class="switch" for="toggle-focus-mode" aria-label="Toggle Focus Mode">
-          <input type="checkbox" id="toggle-focus-mode">
-          <span class="slider"></span>
-        </label>
-      </div>
-    </section>
 
-    <!-- Quick Actions Bar -->
-    <section class="quick-actions-bar">
-      <div class="quick-action-header">
-        <span class="section-label">Quick Actions</span>
-        <span class="queue-summary-text" id="queue-summary-text">0 items in queue</span>
-      </div>
-      <div class="quick-actions-grid">
-        <button type="button" class="quick-btn" id="btn-quick-fs">
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
-            <path d="M4 4h6v2H6v4H4V4zm16 0h-6v2h4v4h2V4zM4 20h6v-2H6v-4H4v6zm16 0h-6v-2h4v-4h2v6z"/>
-          </svg>
-          <span id="quick-fs-text">Window Fullscreen</span>
-        </button>
-
-        <button type="button" class="quick-btn" id="btn-quick-focus">
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
-          </svg>
-          <span id="quick-focus-text">Focus Mode</span>
-        </button>
-
-        <button type="button" class="quick-btn" id="btn-quick-add">
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
-            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-          </svg>
-          <span id="quick-add-text">Add to Queue</span>
-        </button>
-
-        <button type="button" class="quick-btn" id="btn-open-queue">
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
-            <path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12z"/>
-          </svg>
-          <span>Open Queue (<span id="queue-count-badge">0</span>)</span>
-        </button>
-      </div>
-    </section>
-
-    <!-- Active Video Card (Visible only when on a YouTube video) -->
-    <section id="active-video-card" class="active-video-card hidden">
-      <div class="active-video-header">
-        <span class="badge-accent">Active Video</span>
-      </div>
-      <div class="active-video-title" id="active-video-title">Loading title...</div>
-      <div class="active-video-channel" id="active-video-channel">Channel</div>
-    </section>
-
-    <!-- Dashboard Link Section -->
-    <section class="dashboard-link-section">
-      <button type="button" class="btn btn-primary btn-block" id="btn-open-dashboard">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-          <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zM7 10h2v7H7zm4-3h2v10h-2zm4 6h2v4h-2z"/>
-        </svg>
-        <span>Open Dashboard</span>
-      </button>
-    </section>
-
-    <!-- Quick Queue Drawer -->
-    <div id="queue-drawer" class="drawer hidden">
-      <div class="drawer-header">
-        <span class="drawer-title">Learning Queue</span>
-        <button type="button" class="drawer-close" id="queue-drawer-close">&times;</button>
-      </div>
-      <div class="drawer-body" id="queue-items-list">
-        <div class="empty-state">
-          <p>No items in your queue.</p>
-          <span class="empty-hint">Click "+ Add to Queue" on YouTube to save videos intentionally.</span>
+        <!-- Playlist Detected Box (Shown if list= parameter or playlist context present) -->
+        <div class="playlist-detected-card hidden" id="playlist-detected-card">
+          <div class="pl-detect-header">
+            <span class="pl-badge">PLAYLIST DETECTED</span>
+          </div>
+          <div class="pl-details">
+            <div class="pl-title" id="curr-pl-title">Playlist Title</div>
+            <div class="pl-lesson-idx" id="curr-pl-idx">Lesson 1 of 10</div>
+          </div>
         </div>
-      </div>
+
+        <!-- Independent Quick Actions -->
+        <div class="media-actions-row">
+          <button type="button" class="btn-queue-action" id="btn-quick-add" disabled>
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+              <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+            </svg>
+            <span id="quick-add-text">+ Add Video</span>
+          </button>
+
+          <button type="button" class="btn-queue-action hidden" id="btn-quick-add-playlist" disabled>
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+              <path d="M4 10h12v2H4zm0-4h12v2H4zm0 8h8v2H4zm10 0v6l5-3z"/>
+            </svg>
+            <span id="quick-add-pl-text">+ Add Playlist</span>
+          </button>
+        </div>
+      </section>
+
+      <div class="divider"></div>
+
+      <!-- Learning Queue Preview -->
+      <section class="queue-section">
+        <div class="queue-header">
+          <span class="section-heading">LEARNING QUEUE</span>
+          <span class="queue-summary-text" id="queue-summary-text">0 items</span>
+        </div>
+        
+        <div class="queue-preview-list" id="queue-preview-list">
+          <!-- Rendered 3-4 preview items -->
+        </div>
+
+        <div class="queue-view-all-row hidden" id="queue-view-all-row">
+          <button type="button" class="btn-view-all" id="btn-view-all-queue">
+            <span id="view-all-text">View all items →</span>
+          </button>
+        </div>
+      </section>
+
+      <div class="divider"></div>
+
+      <!-- Open Dashboard Action -->
+      <section class="main-actions-section">
+        <button type="button" class="btn btn-secondary btn-block" id="btn-open-dashboard">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zM7 10h2v7H7zm4-3h2v10h-2zm4 6h2v4h-2z"/>
+          </svg>
+          <span>Open Dashboard</span>
+        </button>
+      </section>
+
+      <div class="divider"></div>
+
+      <!-- Footer -->
+      <footer class="popup-footer">
+        <span>Local · Private · No Tracking</span>
+      </footer>
     </div>
-
-    <!-- Footer -->
-    <footer class="popup-footer">
-      <span>100% Local • Privacy First • No Tracking</span>
-    </footer>
   </div>
 
   <script src="../shared/constants.js"></script>

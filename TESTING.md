@@ -1,6 +1,6 @@
-# YouTube Focus — Manual QA & Testing Guide
+# WatchFlow — Manual QA & Testing Guide
 
-This document contains step-by-step test plans to verify Phase 1 features of the **YouTube Focus** Chrome Extension (Manifest V3).
+This document contains step-by-step test plans to verify Phase 1 features of the **WatchFlow** Chrome Extension (Manifest V3).
 
 ---
 
@@ -15,7 +15,7 @@ This document contains step-by-step test plans to verify Phase 1 features of the
   4. Select the project root folder: `/Users/manassurvyawanshi/Downloads/VC Projects/Youtube-focus`.
 - **Expected Results**:
   - The extension is loaded without warnings or manifest errors.
-  - The title shows: `YouTube Focus — Intentional Learning & Video Player`.
+  - The title shows: `WatchFlow`.
   - Icon displays properly at all resolutions (toolbar and extension cards).
   - Background Service Worker shows "service worker (Active)".
 

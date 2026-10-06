@@ -1,8 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "YouTube Focus — Intentional Learning & Video Player",
+  "name": "WatchFlow",
+  "short_name": "WatchFlow",
   "version": "1.0.0",
-  "description": "Privacy-first productivity and focus layer for YouTube. Watch intentionally with Window Fullscreen, distraction blocking, and learning tools.",
+  "description": "Watch YouTube with intention.",
   "icons": {
     "16": "src/icons/icon-16.png",
     "32": "src/icons/icon-32.png",
@@ -17,7 +18,7 @@
       "48": "src/icons/icon-48.png",
       "128": "src/icons/icon-128.png"
     },
-    "default_title": "YouTube Focus"
+    "default_title": "WatchFlow"
   },
   "options_ui": {
     "page": "src/dashboard/dashboard.html",
@@ -52,13 +53,25 @@
       "run_at": "document_start"
     }
   ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "src/assets/*",
+        "src/icons/*"
+      ],
+      "matches": [
+        "*://*.youtube.com/*",
+        "*://youtube.com/*"
+      ]
+    }
+  ],
   "commands": {
     "toggle-focus-mode": {
       "suggested_key": {
         "default": "Alt+F",
         "mac": "Alt+F"
       },
-      "description": "Toggle Focus Mode on YouTube"
+      "description": "Toggle Focus Mode in WatchFlow"
     }
   }
 }
